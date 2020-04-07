@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\UserModel;
 use Validator;
+use Hash;
 use \Firebase\JWT\JWT;
 use App\Mail\ActivationMail;
 
@@ -224,7 +225,51 @@ class UserController extends Controller
 
             //Return response
             return response()->json(["message"=>"Email successfully changed.",
-                                     "jwt"=>$jwt],200);
+                                     "token"=>$jwt],200);
+        }
+    }
+
+    //Logged In - New password
+    public function loggednewPassword(Request $request){
+        if(!self::CheckIfUserExists($request)){
+            return response()->json(["message"=>"User does not exist."],403);
+        }else{
+            //Validation
+            $rules=[
+                'new_password'=>'required|min:6'
+            ];
+
+            $validator=Validator::make($request->all(),$rules);
+            if($validator->fails()){
+                return response()->json($validator->errors(),400);
+            }
+
+            //Check if entered password is equal to current password
+            $jwt=$request->header('Authorization');
+            $key=env('JWT_SECRET_KEY','somedefaultvalue');
+            $jwt=explode(' ',$jwt)[1];
+            $decoded=JWT::decode($jwt,$key,array('HS256'));
+            $email=$decoded->email;
+            $password=$decoded->password; // currentPassword
+
+            //Check if entered password is invalid
+            if(!Hash::check($request->password,$password))
+                return response()->json(["message"=>"Invalid current password."],403);
+            
+            //Change password
+            $newPassword=bcrypt($request->new_password);
+            UserModel::where('email',$email)->where('password',$password)->update(["password"=>$newPassword]);
+
+            //Generate new token
+            $payload = array(
+                "email"=>$email,
+                "password"=> $newPassword
+            );
+            $jwt = JWT::encode($payload, $key);
+            return response()->json(["message"=>"Password successfuly changed.",
+                                     "token"=>$jwt],200);
+
+            
         }
     }
 
