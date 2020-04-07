@@ -153,6 +153,17 @@ class UserController extends Controller
 
     }
 
+    public function resetCode(Request $request){
+        $email=$request->email;
+        $resetCode=$request->reset_code;
+
+        if(count(UserModel::where('email',$email)->where('pwdresetcode',$resetCode)->get())!=0){
+            return response()->json(["message"=>"Valid code."],200);
+        }else{
+            return response()->json(["message"=>"Invalid code."],200);
+        }
+    }
+
     //------------------------ Other functions ---------------------
     public function CheckIfUserExists(Request $request){
         //Decode JWT
