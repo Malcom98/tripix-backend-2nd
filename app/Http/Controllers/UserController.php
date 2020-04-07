@@ -164,6 +164,31 @@ class UserController extends Controller
         }
     }
 
+    public function newPassword(Request $request){
+        //Validator
+        $rules=[
+            'password'=>'required|min:6'
+        ];
+
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails()){
+            return response()->json($validator->errors(),400);
+        }
+
+        //Put variables into request fields
+        $email=$request->email;
+        $reset_code=$request->reset_code;
+        $new_password=$request->new_password;
+        $hashedPassword=bcrypt($new_password);
+
+        if(count(UserModel::where('email',$email)->where('pwdresetcode',$reset_code)->get())!=0){
+            UserModel::where('email',$email)->where('pwdresetcode',$reset_code)->update(['password'=>$hashedPassword]);
+            return response()->json(["message"=>"Password successfully changed."],200);
+        }else{
+            return response()->json(["message"=>"Invalid data."],403);
+        }
+    }
+
     //------------------------ Other functions ---------------------
     public function CheckIfUserExists(Request $request){
         //Decode JWT
