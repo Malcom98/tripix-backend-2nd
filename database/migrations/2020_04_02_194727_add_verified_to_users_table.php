@@ -15,7 +15,7 @@ class AddVerifiedToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('verified')->default('None.');
-            $table->string('pwdResetCode')->default('None.');
+            $table->string('pwdresetcode')->default('None.');
         });
     }
 
@@ -28,7 +28,7 @@ class AddVerifiedToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('verified');
-            $table->dropColumn('pwdResetCode');
+            $table->dropColumn('pwdresetcode');
         });
     }
 }

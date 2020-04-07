@@ -126,6 +126,33 @@ class UserController extends Controller
         }
     }
 
+    //FORGOTTEN PASSWORD
+    public function forgottenPassword(Request $request){
+        //Get email from request
+        $email=$request->email;
+
+        if(count(UserModel::where('email',$email)->get())!=0){
+            //Generate code
+            $code=self::GenerateVerificationCode();
+
+            //Update code in database
+            UserModel::where('email',$email)->update(['pwdresetcode'=>$code]);
+            
+            //Send email
+            $details = [
+                'title' => 'Password Reset Code for Tripix - Travelling Application',
+                'body' => 'Your password reset code is: '.$code
+            ];
+            \Mail::to($email)->send(new ActivationMail($details));
+
+            //Response message
+            return response()->json(["message"=>"Reset code has been sent to email."],200);
+        }else{
+            return response()->json(["message"=>"Invalid email."],403);
+        }
+
+    }
+
     //------------------------ Other functions ---------------------
     public function CheckIfUserExists(Request $request){
         //Decode JWT
@@ -161,8 +188,8 @@ class UserController extends Controller
 
     public function GenerateVerificationCode(){
         $verificationCode="";
-        $letters="aAbBcCdDeEfFgGhHiIjJkKlLyY";
-        for($i=0;$i<16;$i++){
+        $letters="12345678901234567890";
+        for($i=0;$i<6;$i++){
             $verificationCode.=$letters[rand(1,20)];
         }
         return $verificationCode;

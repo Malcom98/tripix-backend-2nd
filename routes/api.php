@@ -22,6 +22,7 @@ Route::get('users','UserController@index');
 //Route::get('users/{id}','UserController@show');
 Route::post('users','UserController@store');
 Route::post('users/verify','UserController@verify');
+Route::post('users/forgottenPassword','UserController@forgottenPassword');
 //Route::put('users/{id}','UserController@update');
 //Route::delete('users/{id}','UserController@delete');
 
