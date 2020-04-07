@@ -25,6 +25,7 @@ Route::post('users/verify','UserController@verify');
 Route::post('users/forgottenPassword','UserController@forgottenPassword');
 Route::post('users/resetCode','UserController@resetCode');
 Route::post('users/newPassword','UserController@newPassword');
+Route::post('users/loggedNewEmail','UserController@newEmail');
 //Route::put('users/{id}','UserController@update');
 //Route::delete('users/{id}','UserController@delete');
 

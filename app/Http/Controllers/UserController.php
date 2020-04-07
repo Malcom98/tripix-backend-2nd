@@ -167,7 +167,7 @@ class UserController extends Controller
     public function newPassword(Request $request){
         //Validator
         $rules=[
-            'password'=>'required|min:6'
+            'new_password'=>'required|min:6'
         ];
 
         $validator=Validator::make($request->all(),$rules);
@@ -188,6 +188,46 @@ class UserController extends Controller
             return response()->json(["message"=>"Invalid data."],403);
         }
     }
+
+    //Logged In - New Email
+    public function newEmail(Request $request){
+        if(!self::CheckIfUserExists($request)){
+            return response()->json(["message"=>"User does not exist."],403);
+        }else{
+            //Validation
+            $rules=[
+                'email'=>'required|min:3|max:64|email|unique:users',
+            ];
+
+            $validator=Validator::make($request->all(),$rules);
+            if($validator->fails()){
+                return response()->json($validator->errors(),400);
+            }
+
+            //Get new email from request
+            $newEmail=$request->email;
+            //Dehash JWT
+            $jwt=$request->header('Authorization');
+            $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
+            $key=env("JWT_SECRET_KEY","somedefaultvalue");
+            $decoded=JWT::decode($jwt,$key,array('HS256'));
+            $currentEmail=$decoded->email;
+            $currentPassword=$decoded->password;
+            UserModel::where('email',$currentEmail)->where('password',$currentPassword)->update(['email'=>$newEmail]);
+
+            //Generate new token
+            $payload = array(
+                "email"=>$newEmail,
+                "password"=> $currentPassword
+            );
+            $jwt = JWT::encode($payload, $key);
+
+            //Return response
+            return response()->json(["message"=>"Email successfully changed.",
+                                     "jwt"=>$jwt],200);
+        }
+    }
+
 
     //------------------------ Other functions ---------------------
     public function CheckIfUserExists(Request $request){
