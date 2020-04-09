@@ -113,7 +113,9 @@ class GoogleAPIController extends Controller
         foreach($nearbyCities as $city){
             $cityName=$city->name;
             $photoReference=self::getPhotoReference($cityName);
-            array_push($returnMe,["city"=>$cityName,"photo_reference"=>$photoReference]);
+            if($photoReference!="null"){
+                array_push($returnMe,["city"=>$cityName,"photo_reference"=>$photoReference]);
+            }
         }
 
         return $returnMe;
@@ -226,7 +228,12 @@ class GoogleAPIController extends Controller
     //This function is used for API endpoint /getphoto
     private function getPhotoReference($cityName){
         $url=("https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=".rawurlencode($cityName)."&inputtype=textquery&fields=photos&key=".env("GOOGLE_API_KEY","somedefaultvalue"));
-        return json_decode(file_get_contents($url))->candidates[0]->photos[0]->photo_reference;
+        //return !((array)json_decode(file_get_contents($url))->candidates[0])?"empty":"notempty";
+        if((array)json_decode(file_get_contents($url))->candidates[0]){
+            return json_decode(file_get_contents($url))->candidates[0]->photos[0]->photo_reference;
+        }else{
+            return "null";
+        }
     }
 
     //This function is used to get only information that is needed
