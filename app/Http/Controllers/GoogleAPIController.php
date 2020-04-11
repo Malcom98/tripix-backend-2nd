@@ -239,11 +239,55 @@ class GoogleAPIController extends Controller
     //This function is used to get only information that is needed
     //for front end from google API
     private function getAttractionInformationForFrontEnd($response){
+        //return (object)$response->results;
+
+        //Izracun ratingova
+        //S = wR + (1-w)C
+        //w = v/v+m
+
+        //Prvo računamo C i m
+        $counter=0; // Broji koliko je zapisa
+        $suma_ratinga=0.0; // Broji ukupnu sumu ratinga
+        $ukupni_broj_glasova=0; // Broji ukupni broj glasova
+
+        $places=((object)$response)->results;
+        foreach($places as $place){
+            if(isset($place->photos)){
+                $counter++;
+                $suma_ratinga+=$place->rating;
+                $ukupni_broj_glasova+=$place->user_ratings_total;
+            }
+        }
+
+        //Izračun C i m
+        $C=$suma_ratinga/$counter;
+        $m=$ukupni_broj_glasova/$counter;
+
+        //U varijablu novi rating spremam nove ratingove
+        $noviRating=array();
+
+        //Izračun novih ratingova
+        $places=((object)$response)->results;
+
+        foreach($places as $place){
+            if(isset($place->photos) && $place->user_ratings_total>=50){
+                $v=$place->user_ratings_total;
+                $w=$v/($v+$m);
+                $R=$place->rating;
+                $S=$w*$R+(1-$w)*$C;
+                array_push($noviRating,$S);
+            }
+        }
+
+        //return $noviRating;
+
+        //Vraćanje samo potrebnih informacija
+        $counter=0;
         $neededInformation=array();
         $places=((object)$response)->results;
         foreach($places as $place){
             //Obavezno koristiti isset umjesto !=null
-            if(isset($place->photos)){
+            if(isset($place->photos) && $place->user_ratings_total>=50){
                 $name=$place->name;
                 $photo_reference=$place->photos[0]->photo_reference;
                 $location=$place->geometry->location;
@@ -254,8 +298,10 @@ class GoogleAPIController extends Controller
                     "photo_reference"=>$photo_reference,
                     "location"=>$location,
                     "place_id"=>$place_id,
-                    "rating"=>$rating
+                    "number_of_votes"=>$place->user_ratings_total,
+                    "rating"=>$noviRating[$counter] // Tu moram staviti nove ratingove, znaci moram ih prije izracunat
                 ];
+                $counter++;
                 array_push($neededInformation,$object);
             }
         }
