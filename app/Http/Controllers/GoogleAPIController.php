@@ -236,9 +236,9 @@ class GoogleAPIController extends Controller
         }
     }
 
-    //This function is used to get only information that is needed
-    //for front end from google API
-    private function getAttractionInformationForFrontEnd($response){
+    //Ova formula služi za novo rangiranje attraction prema ratingu
+    //Gleda samo one lokacije koje imaju $place->photos i više od 50 glasova.
+    private function bayesovaFormula($response){
         //return (object)$response->results;
 
         //Izracun ratingova
@@ -252,7 +252,7 @@ class GoogleAPIController extends Controller
 
         $places=((object)$response)->results;
         foreach($places as $place){
-            if(isset($place->photos)){
+            if(isset($place->photos)){ // && && $place->user_ratings_total>=50
                 $counter++;
                 $suma_ratinga+=$place->rating;
                 $ukupni_broj_glasova+=$place->user_ratings_total;
@@ -279,7 +279,13 @@ class GoogleAPIController extends Controller
             }
         }
 
-        //return $noviRating;
+        return $noviRating;
+    }
+
+    //This function is used to get only information that is needed
+    //for front end from google API
+    private function getAttractionInformationForFrontEnd($response){
+        $noviRating=self::bayesovaFormula($response);
 
         //Vraćanje samo potrebnih informacija
         $counter=0;
@@ -298,7 +304,7 @@ class GoogleAPIController extends Controller
                     "photo_reference"=>$photo_reference,
                     "location"=>$location,
                     "place_id"=>$place_id,
-                    "number_of_votes"=>$place->user_ratings_total,
+                   // "number_of_votes"=>$place->user_ratings_total,
                     "rating"=>$noviRating[$counter] // Tu moram staviti nove ratingove, znaci moram ih prije izracunat
                 ];
                 $counter++;
