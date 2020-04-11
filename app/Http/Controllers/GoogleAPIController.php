@@ -133,7 +133,7 @@ class GoogleAPIController extends Controller
             if($location==null || $type==null)
                 return response()->json(["Error" => "Bad Request"],400);
 
-            $url="https://maps.googleapis.com/maps/api/place/textsearch/json?input=".$location."&inputtype=textquery&type=".$type."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE";
+            $url="https://maps.googleapis.com/maps/api/place/textsearch/json?input=".rawurlencode($location)."&inputtype=textquery&type=".$type."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE";
             $response=json_decode(file_get_contents($url));
             
             //In needed response variable there is only info that is 

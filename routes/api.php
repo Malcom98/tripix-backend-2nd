@@ -55,4 +55,3 @@ Route::get('/attractions/pets','GoogleAPIController@getAttractionPets');
 Route::get('/attractions/schools','GoogleAPIController@getAttractionSchools');
 Route::get('/attractions/religions','GoogleAPIController@getAttractionReligions');
 Route::get('/attractions/landmarks','GoogleAPIController@getAttractionLandmarks');
-
