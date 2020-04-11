@@ -11,6 +11,98 @@ class GoogleAPIController extends Controller
     //-------------------------------------------------------------------
     //------------------------ Google API Functions ---------------------
     //-------------------------------------------------------------------
+    //---------------------------- Routes -------------------------------
+    //Ovo je glavna funkcija unutar naše aplikacije.
+    //Kao parametre u requestu dobivam origin, destination i waypoints latitude i longitude
+    //Kao response vraća se locations array koji ima objekt s atributima: place_id, latitude,
+    //                                              longitude, duration, distance
+    //                                          -> odnosi se na sljedeći landmark
+    //Također ima route -> overview_polyline_points iz responsea
+    //Također ima distance -> ukupni distance
+    //Također ima duration -> ukupni duration
+    public function newRoute(Request $request){
+        //Making google api directions request
+        $link = "https://maps.googleapis.com/maps/api/directions/json?origin=46.3526877,16.8123505&waypoints=optimize:true|46.3380636,16.6129778|46.3258985,16.7827804&destination=46.3091764,16.3420242&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+        $googleDirectionsResponse = json_decode(file_get_contents($link));
+        
+        //Data needed for response
+        $locations=array();
+        $polyline= json_encode($googleDirectionsResponse->routes[0]->overview_polyline->points); // Sada mi se ovo nalazi u stringu
+        $total_distance=0;
+        $total_duration=0;
+
+        //Gathering data for 
+        $place_ids=array();
+        foreach($googleDirectionsResponse->geocoded_waypoints as $waypoint){
+            array_push($place_ids,$waypoint->place_id);
+        }
+
+
+        //first location - TO DO
+        //dodati prvi landmark tj pocetnu lokaciju tu..
+        //latitude i longitude budeju origin is requesta
+        //duration i distance bude 0
+        $object=[
+            "place_id"=>$place_ids[0],
+            "latitude"=>$place_latitude,
+            "longitude"=>$place_longitude,
+            "duration"=>$place_duration,
+            "distance"=>$place_distance
+        ];
+
+        //ostali landmarkovi
+        $counter=1;
+        foreach($googleDirectionsResponse->routes[0]->legs as $path){
+            //return json_encode($path);
+            $place_id=$place_ids[$counter];
+            $counter++;
+            $place_latitude=$path->end_location->lat;
+            $place_longitude=$path->end_location->lng;
+            $place_duration=explode(' ',$path->duration->text)[0];
+            $place_distance=explode(' ',$path->distance->text)[0];
+
+            $object=[
+                "place_id"=>$place_id,
+                "latitude"=>$place_latitude,
+                "longitude"=>$place_longitude,
+                "duration"=>$place_duration,
+                "distance"=>$place_distance
+            ];
+
+            array_push($locations,$object);
+
+            $total_distance+=explode(' ',$path->distance->text)[0];
+            $total_duration+=explode(' ',$path->duration->text)[0];
+        }
+
+        //TO DO - latitude i longitude budeju origin iz requesta
+        $odrediste=[
+            "place_id"=>"Odrediste.",
+            "latitude"=>"0",
+            "longitude"=>"0",
+            "duration"=>"0",
+            "distance"=>"0"
+        ];
+        array_push($locations,$odrediste);
+
+        //Forming response object
+        $response_object=[
+            "locations"=>$locations,
+            "route"=>$polyline,
+            "distance"=>$total_distance,
+            "duration"=>$total_duration
+        ];
+
+        return json_encode($response_object);
+
+        return json_encode($googleDirectionsResponse->routes[0]->legs[0]);
+  
+  
+    }
+
+
+
+
 
     //---------------------------- Get Nearby ---------------------------
     //Get nearby global function.
@@ -339,5 +431,8 @@ class GoogleAPIController extends Controller
         }
         return $arrayWithoutDuplicates;
     }
+
+
+
 
 }
