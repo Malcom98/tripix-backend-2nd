@@ -25,15 +25,8 @@ class GoogleAPIController extends Controller
         $destination=$request->destination;
         $waypoints=$request->waypoints;
 
-        //Making google api directions request
-        $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
-        foreach($waypoints as $waypoint){
-            $link.="|".$waypoint["lat"].",".$waypoint["long"];
-        }
-        $link.="&destination=".$origin["lat"].",".$origin["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
         $googleDirectionsResponse = json_decode(file_get_contents($link));
         
-        return json_encode($googleDirectionsResponse);
         //Data needed for response
         $locations=array();
         $polyline= json_encode($googleDirectionsResponse->routes[0]->overview_polyline->points); // Sada mi se ovo nalazi u stringu
@@ -46,31 +39,26 @@ class GoogleAPIController extends Controller
             array_push($place_ids,$waypoint->place_id);
         }
 
-
-        //first location - TO DO
-        //dodati prvi landmark tj pocetnu lokaciju tu..
-        //latitude i longitude budeju origin is requesta
-        //duration i distance bude 0
-        $object=[
+        //Dodavanje izvora (origin) u locations
+        $origin=[
             "place_id"=>$place_ids[0],
-            "latitude"=>$place_latitude,
-            "longitude"=>$place_longitude,
-            "duration"=>$place_duration,
-            "distance"=>$place_distance
+            "latitude"=>$origin["lat"],
+            "longitude"=>$origin["long"],
+            "duration"=>"0",
+            "distance"=>"0"
         ];
+        array_push($locations,$origin);
 
         //ostali landmarkovi
         $counter=1;
         foreach($googleDirectionsResponse->routes[0]->legs as $path){
-            //return json_encode($path);
             $place_id=$place_ids[$counter];
-            $counter++;
             $place_latitude=$path->end_location->lat;
             $place_longitude=$path->end_location->lng;
             $place_duration=explode(' ',$path->duration->text)[0];
             $place_distance=explode(' ',$path->distance->text)[0];
 
-            $object=[
+            $waypoint=[
                 "place_id"=>$place_id,
                 "latitude"=>$place_latitude,
                 "longitude"=>$place_longitude,
@@ -78,21 +66,22 @@ class GoogleAPIController extends Controller
                 "distance"=>$place_distance
             ];
 
-            array_push($locations,$object);
+            array_push($locations,$waypoint);
+            $counter++;
 
             $total_distance+=explode(' ',$path->distance->text)[0];
             $total_duration+=explode(' ',$path->duration->text)[0];
         }
 
-        //TO DO - latitude i longitude budeju origin iz requesta
-        $odrediste=[
-            "place_id"=>"Odrediste.",
-            "latitude"=>"0",
-            "longitude"=>"0",
+        //Dodavanje destinacije u array lokacija
+        $destination=[
+            "place_id"=>"Destination",
+            "latitude"=>$destination["lat"],
+            "longitude"=>$destination["long"],
             "duration"=>"0",
             "distance"=>"0"
         ];
-        array_push($locations,$odrediste);
+        array_push($locations,$destination);
 
         //Forming response object
         $response_object=[
@@ -103,13 +92,7 @@ class GoogleAPIController extends Controller
         ];
 
         return json_encode($response_object);
-
-        return json_encode($googleDirectionsResponse->routes[0]->legs[0]);
-  
-  
     }
-
-
 
 
 
