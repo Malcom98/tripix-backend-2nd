@@ -21,10 +21,19 @@ class GoogleAPIController extends Controller
     //Također ima distance -> ukupni distance
     //Također ima duration -> ukupni duration
     public function newRoute(Request $request){
+        $origin=$request->origin;
+        $destination=$request->destination;
+        $waypoints=$request->waypoints;
+
         //Making google api directions request
-        $link = "https://maps.googleapis.com/maps/api/directions/json?origin=46.3526877,16.8123505&waypoints=optimize:true|46.3380636,16.6129778|46.3258985,16.7827804&destination=46.3091764,16.3420242&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+        $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
+        foreach($waypoints as $waypoint){
+            $link.="|".$waypoint["lat"].",".$waypoint["long"];
+        }
+        $link.="&destination=".$origin["lat"].",".$origin["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
         $googleDirectionsResponse = json_decode(file_get_contents($link));
         
+        return json_encode($googleDirectionsResponse);
         //Data needed for response
         $locations=array();
         $polyline= json_encode($googleDirectionsResponse->routes[0]->overview_polyline->points); // Sada mi se ovo nalazi u stringu
