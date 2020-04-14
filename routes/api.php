@@ -57,4 +57,4 @@ Route::get('/attractions/religions','GoogleAPIController@getAttractionReligions'
 Route::get('/attractions/landmarks','GoogleAPIController@getAttractionLandmarks');
 
 //Routes
-Route::get('/route/new_route','GoogleAPIController@newRoute');
+Route::post('/route/new_route','GoogleAPIController@newRoute');

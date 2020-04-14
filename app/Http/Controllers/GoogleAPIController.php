@@ -21,10 +21,18 @@ class GoogleAPIController extends Controller
     //Također ima distance -> ukupni distance
     //Također ima duration -> ukupni duration
     public function newRoute(Request $request){
+        //Token check
+        if(!self::JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized"],401);
+        }
+
+        //Putting data from request body into php variables
         $origin=$request->origin;
         $destination=$request->destination;
         $waypoints=$request->waypoints;
 
+        //Getting content
+        $link=self::createLink($origin,$destination,$waypoints);
         $googleDirectionsResponse = json_decode(file_get_contents($link));
         
         //Data needed for response
@@ -33,23 +41,17 @@ class GoogleAPIController extends Controller
         $total_distance=0;
         $total_duration=0;
 
-        //Gathering data for 
+        //Gathering data for place ids
         $place_ids=array();
         foreach($googleDirectionsResponse->geocoded_waypoints as $waypoint){
             array_push($place_ids,$waypoint->place_id);
         }
 
-        //Dodavanje izvora (origin) u locations
-        $origin=[
-            "place_id"=>$place_ids[0],
-            "latitude"=>$origin["lat"],
-            "longitude"=>$origin["long"],
-            "duration"=>"0",
-            "distance"=>"0"
-        ];
-        array_push($locations,$origin);
+        //Adding origin to locations
+        $originObject=self::createOriginObject($place_ids[0],$origin);
+        array_push($locations,$originObject);
 
-        //ostali landmarkovi
+        //Adding landmarks to location
         $counter=1;
         foreach($googleDirectionsResponse->routes[0]->legs as $path){
             $place_id=$place_ids[$counter];
@@ -73,15 +75,9 @@ class GoogleAPIController extends Controller
             $total_duration+=explode(' ',$path->duration->text)[0];
         }
 
-        //Dodavanje destinacije u array lokacija
-        $destination=[
-            "place_id"=>"Destination",
-            "latitude"=>$destination["lat"],
-            "longitude"=>$destination["long"],
-            "duration"=>"0",
-            "distance"=>"0"
-        ];
-        array_push($locations,$destination);
+        //Adding destination to locations array
+        //$destinationObject=self::createDestinationObject("Destination",$destination);
+        //array_push($locations,$destinationObject);
 
         //Forming response object
         $response_object=[
@@ -91,9 +87,46 @@ class GoogleAPIController extends Controller
             "duration"=>$total_duration
         ];
 
+        //Returning JSON object
         return json_encode($response_object);
     }
 
+    //This function is used to generate link for google directions api
+    private function createLink($origin,$destination,$waypoints){//Making google api directions request
+        $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
+        foreach($waypoints as $waypoint){
+            $link.="|".$waypoint["lat"].",".$waypoint["long"];
+        }
+        $link.="&destination=".$origin["lat"].",".$origin["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+        
+        return $link;
+    }
+
+    //This function creates origin object
+    private function createOriginObject($place_id,$origin){
+        $originObject=[
+            "place_id"=>$place_id,
+            "latitude"=>$origin["lat"],
+            "longitude"=>$origin["long"],
+            "duration"=>"0",
+            "distance"=>"0"
+        ];
+
+        return $originObject;
+    }
+
+    //This function creates destination object
+    private function createDestinationObject($place_id,$destination){
+        $destinationObject=[
+            "place_id"=>"Destination",
+            "latitude"=>$destination["lat"],
+            "longitude"=>$destination["long"],
+            "duration"=>"0",
+            "distance"=>"0"
+        ];
+
+        return $destinationObject;
+    }
 
 
     //---------------------------- Get Nearby ---------------------------
