@@ -34,10 +34,10 @@ class GoogleAPIController extends Controller
         //Getting content
         $link=self::createLink($origin,$destination,$waypoints);
         $googleDirectionsResponse = json_decode(file_get_contents($link));
-        
+
         //Data needed for response
         $locations=array();
-        $polyline= json_encode($googleDirectionsResponse->routes[0]->overview_polyline->points); // Sada mi se ovo nalazi u stringu
+        $polyline= $googleDirectionsResponse->routes[0]->overview_polyline->points; // Sada mi se ovo nalazi u stringu
         $total_distance=0;
         $total_duration=0;
 
@@ -97,7 +97,7 @@ class GoogleAPIController extends Controller
         foreach($waypoints as $waypoint){
             $link.="|".$waypoint["lat"].",".$waypoint["long"];
         }
-        $link.="&destination=".$origin["lat"].",".$origin["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+        $link.="&destination=".$destination["lat"].",".$destination["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
         
         return $link;
     }
