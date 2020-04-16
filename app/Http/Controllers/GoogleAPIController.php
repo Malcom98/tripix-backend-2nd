@@ -43,8 +43,9 @@ class GoogleAPIController extends Controller
         //Gathering data for place ids
         $coordinates=array();
         foreach($googleDirectionsResponse->routes[0]->waypoint_order as $waypoint){
-            array_push($coordinates,["id"=>$waypoint]);
+            array_push($coordinates,$waypoint);
         }
+        
         //return $coordinates;
         //Adding origin to locations
         $originObject=self::createOriginObject($origin);
@@ -52,11 +53,18 @@ class GoogleAPIController extends Controller
 
         //Adding landmarks to location
         $counter=1;
+        $destination_distance;
+        $destination_duration;
         foreach($googleDirectionsResponse->routes[0]->legs as $path){
-            if($counter==count($googleDirectionsResponse->routes[0]->legs))
-                    break;
-            $place_latitude=$waypoints[$coordinates[$counter-1]["id"]]["lat"];
-            $place_longitude=$waypoints[$coordinates[$counter-1]["id"]]["long"];
+            //Skip destination jer je ona stavljena u legs kao posljednji objekt u arrayu
+            if($counter==count($googleDirectionsResponse->routes[0]->legs)){
+                $destination_duration=explode(' ',$path->duration->text)[0];
+                $destination_distance=explode(' ',$path->distance->text)[0];
+                break;
+            }
+
+            $place_latitude=$waypoints[$coordinates[$counter-1]]["lat"];
+            $place_longitude=$waypoints[$coordinates[$counter-1]]["long"];
             $place_duration=explode(' ',$path->duration->text)[0];
             $place_distance=explode(' ',$path->distance->text)[0];
 
@@ -76,8 +84,8 @@ class GoogleAPIController extends Controller
         }
 
         //Adding destination to locations array
-        //$destinationObject=self::createDestinationObject($destination);
-        //array_push($locations,$destinationObject);
+        $destinationObject=self::createDestinationObject($destination,$destination_duration,$destination_distance);
+        array_push($locations,$destinationObject);
 
         //Forming response object
         $response_object=[
@@ -116,13 +124,12 @@ class GoogleAPIController extends Controller
     }
 
     //This function creates destination object
-    private function createDestinationObject($destination){
+    private function createDestinationObject($destination,$duration,$distance){
         $destinationObject=[
-            "place_id"=>"Destination",
             "latitude"=>$destination["lat"],
             "longitude"=>$destination["long"],
-            "duration"=>"0",
-            "distance"=>"0"
+            "duration"=>$duration,
+            "distance"=>$distance
         ];
 
         return $destinationObject;
