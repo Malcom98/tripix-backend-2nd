@@ -18,7 +18,7 @@ class RouteController extends Controller
             return response()->json(["Error"=>"Unauthorized."],401);
         }
 
-        //Authorization
+        //Validation
         $rules=[
             'user_id'=>'required',
             'location'=>'required',
@@ -46,6 +46,16 @@ class RouteController extends Controller
         //JWT Validation
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
+        }
+
+        //Validation
+        $rules=[
+            'route_id'=>'required'
+        ];
+
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails()){
+            return response()->json($validator->errors(),400);
         }
     }
 
