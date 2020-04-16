@@ -16,6 +16,19 @@ class RouteController extends Controller
             return response()->json(["Error"=>"Unauthorized."],401);
         }
 
+        //Authorization
+        $rules=[
+            'user_id'=>'required',
+            'location'=>'required',
+            'total_time'=>'required',
+            'total_distance'=>'required',
+            'locations'=>'required'
+        ];
+
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails()){
+            return response()->json($validator->errors(),400);
+        }
 
         //Save data into table routes
 
