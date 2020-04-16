@@ -31,7 +31,9 @@ class RouteController extends Controller
         }
 
         //Save data into table routes
-
+        self::SavePlannedRoute($request);
+        $userRoutes=Route::where('user_id',$request->user_id)->get();
+        $newRouteId=$newRoute[count($newRoute)-1]["id"];
         //Save data into table route_items
 
         
@@ -42,14 +44,24 @@ class RouteController extends Controller
 
     /* ------------------ Other functions ------------------------- */
     private function SavePlannedRoute($request){
-        $location=$request->used_id;
+        //Get info from request
+        $location=$request->location;
         $user_id=$request->user_id;
         $status_id=1;
         $total_time=$request->total_time;
         $total_distance=$request->total_distance;
 
-
+        //Put info into database
+        $route=new Route();
+        $route->location=$location;
+        $route->user_id=$user_id;
+        $route->status_id=$status_id;
+        $route->total_time=$total_time;
+        $route->total_distance=$total_distance;
+        $route->save();
     }
+
+    
 
     //This function is used to validate JWT token
     private function JWTValidation(Request $request){
