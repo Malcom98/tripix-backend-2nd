@@ -367,7 +367,7 @@ class GoogleAPIController extends Controller
         $suma_ratinga=0.0; // Broji ukupnu sumu ratinga
         $ukupni_broj_glasova=0; // Broji ukupni broj glasova
 
-        $places=((object)$response)->results;
+        $places=json_decode(json_encode($response->results));
         foreach($places as $place){
             if(isset($place->photos)){ // && && $place->user_ratings_total>=50
                 $counter++;
@@ -376,6 +376,9 @@ class GoogleAPIController extends Controller
             }
         }
 
+        //Ipsravak buga?
+        if($counter==0)
+            return array();
         //Izračun C i m
         $C=$suma_ratinga/$counter;
         $m=$ukupni_broj_glasova/$counter;
