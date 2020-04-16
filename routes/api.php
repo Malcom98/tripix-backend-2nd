@@ -59,3 +59,4 @@ Route::get('/attractions/landmarks','GoogleAPIController@getAttractionLandmarks'
 //Routes
 Route::post('/route/new_route','GoogleAPIController@newRoute');
 Route::post('/route/planned_route','RouteController@plannedRoute');
+Route::post('/route/start_route','RouteController@startRoute');

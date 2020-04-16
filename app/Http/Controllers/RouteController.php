@@ -42,6 +42,8 @@ class RouteController extends Controller
         return response()->json(["Message"=>"Ok","RouteId"=>$newRouteId],200);
     }
 
+    public function startRoute(Request $request){
+    }
 
     /* ------------------ Other functions ------------------------- */
     private function SavePlannedRoute($request){
