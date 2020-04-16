@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Route;
+use App\RouteItem;
+use App\TransportType;
 use Illuminate\Http\Request;
 use App\UserModel;
 use Validator;
@@ -33,10 +35,9 @@ class RouteController extends Controller
         //Save data into table routes
         self::SavePlannedRoute($request);
         $userRoutes=Route::where('user_id',$request->user_id)->get();
-        $newRouteId=$newRoute[count($newRoute)-1]["id"];
+        $newRouteId=$userRoutes[count($userRoutes)-1]["id"];
         //Save data into table route_items
-
-        
+        self::SavePlannedRouteItems($request,$newRouteId);
         //Response
         return response()->json(["Message"=>"Ok"],200);
     }
@@ -61,7 +62,28 @@ class RouteController extends Controller
         $route->save();
     }
 
-    
+    private function SavePlannedRouteItems($request,$routeId){
+        //Get route items
+        $locations=$request->locations;
+        $order_counter=0;
+        $transport_type_id=TransportType::where('transport_type','Car')->get()[0]["id"];
+
+        //Inserting route items into database
+        foreach($locations as $location){
+            $routeItem=new RouteItem();
+            $routeItem->route_id=$routeId;
+            $routeItem->place_reference=$location["place_id"];
+            $routeItem->order=$order_counter;
+            $routeItem->latitude=$location["latitude"];
+            $routeItem->longitude=$location["longitude"];
+            $routeItem->time=$location["time"];
+            $routeItem->distance=$location["distance"];
+            $routeItem->transport_type_id=$transport_type_id;
+            $routeItem->completed=0;
+            $routeItem->save();
+            $order_counter++;
+        }
+    }
 
     //This function is used to validate JWT token
     private function JWTValidation(Request $request){
