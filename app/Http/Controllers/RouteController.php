@@ -57,6 +57,16 @@ class RouteController extends Controller
         if($validator->fails()){
             return response()->json($validator->errors(),400);
         }
+
+        //Get route from database
+        $route=Route::where('id',$request->route_id)->get();
+        if(count($route)==0){
+            return response()->json(["Error"=>"That ID does not exist."],400);
+        }
+
+        //Update route
+        Route::where('id',$request->route_id)->update(['status_id'=>2]);
+        return response()->json(["Message"=>"Route started."],200);
     }
 
     /* ------------------ Other functions ------------------------- */
