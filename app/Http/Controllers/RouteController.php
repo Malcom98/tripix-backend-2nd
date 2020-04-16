@@ -43,6 +43,10 @@ class RouteController extends Controller
     }
 
     public function startRoute(Request $request){
+        //JWT Validation
+        if(!self::JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized."],401);
+        }
     }
 
     /* ------------------ Other functions ------------------------- */
