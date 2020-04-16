@@ -39,7 +39,7 @@ class RouteController extends Controller
         //Save data into table route_items
         self::SavePlannedRouteItems($request,$newRouteId);
         //Response
-        return response()->json(["Message"=>"Ok"],200);
+        return response()->json(["Message"=>"Ok","RouteId"=>$newRouteId],200);
     }
 
 
