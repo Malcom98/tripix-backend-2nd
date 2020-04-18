@@ -90,13 +90,13 @@ class RouteController extends Controller
                 $routeItemsArray=array();
                 foreach($routeItems as $routeItem){
                     $routeItemObject=[
-                        "name"=>"TO DO!!!",
+                        "name"=>$routeItem->name,
                         "place_id"=>$routeItem->place_reference,
                         "latitude"=>$routeItem->latitude,
                         "longitude"=>$routeItem->longitude,
                         "duration"=>$routeItem->time,
                         "distance"=>$routeItem->distance,
-                        "photo_reference"=>"TO DO!!!"
+                        "photo_reference"=>$routeItem->photo_reference
                     ];
                     array_push($routeItemsArray,$routeItemObject);
                 }
@@ -176,6 +176,8 @@ class RouteController extends Controller
         foreach($locations as $location){
             $routeItem=new RouteItem();
             $routeItem->route_id=$routeId;
+            $routeItem->name=$location['name'];
+            $routeItem->photo_reference=$location['photo_reference'];
             $routeItem->place_reference=$location["place_id"];
             $routeItem->order=$order_counter;
             $routeItem->latitude=$location["latitude"];
