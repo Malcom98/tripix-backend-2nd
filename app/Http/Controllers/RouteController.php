@@ -47,36 +47,17 @@ class RouteController extends Controller
     //Start route
     //This function is called when user presses "Start" on "Route Overview with Map" screen
     public function startRoute(Request $request){
-        //JWT Validation
-        if(!self::JWTValidation($request)){
-            return response()->json(["Error"=>"Unauthorized."],401);
-        }
-
-        //Validation
-        $rules=[
-            'route_id'=>'required'
-        ];
-
-        $validator=Validator::make($request->all(),$rules);
-        if($validator->fails()){
-            return response()->json($validator->errors(),400);
-        }
-
-        //Get route from database
-        $route=Route::where('id',$request->route_id)->get();
-        if(count($route)==0){
-            return response()->json(["Error"=>"Route with this ID does not exist."],400);
-        }
-
-        //Update route
-        Route::where('id',$request->route_id)->update(['status_id'=>2]);
-        return response()->json(["Message"=>"Route started."],200);
+        return self::ChangeRouteStatus($request,'2','Route started.');
     }
 
     //Finish route
     //This function is called when user reaches his last landmark on map
     public function finishRoute(Request $request){
-        //JWT validation
+        return self::ChangeRouteStatus($request,'3','Route finished successfully. Congratulations.');
+    }
+
+    /* ------------------ Other functions ------------------------- */
+    private function ChangeRouteStatus($request,$status_id,$message){
         if(!self::JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized"],401);
 
@@ -87,7 +68,7 @@ class RouteController extends Controller
 
         $validator=Validator::make($request->all(),$rules);
         if($validator->fails())
-            return response()->json(["Error"=>"Bad request"],400);
+            return response()->json($validator->errors(),400);
 
         //Check if route exists
         $route_id=$request->route_id;
@@ -95,12 +76,10 @@ class RouteController extends Controller
             return response()->json(["Error"=>"Route with this ID does not exist."]);
 
         //Update
-        Route::where('id',$route_id)->update(['status_id'=>'3']);
-        return response()->json(["Message"=>"Route successfully finished. Congratulations!"],202);
-
+        Route::where('id',$route_id)->update(['status_id'=>$status_id]);
+        return response()->json(["Message"=>$message],200);
     }
 
-    /* ------------------ Other functions ------------------------- */
     private function SavePlannedRoute($request){
         //Get info from request
         $location=$request->location;
