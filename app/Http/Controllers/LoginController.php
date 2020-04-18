@@ -50,7 +50,7 @@ class LoginController extends Controller
             );
 
             $jwt = JWT::encode($payload, $key);
-            return response()->json(["message"=>"Successfuly logged in.","token"=>$jwt],200);
+            return response()->json(["message"=>"Successfuly logged in.","token"=>$jwt,"user_id"=>$userModel[0]->id],200);
         }
     }
 }
