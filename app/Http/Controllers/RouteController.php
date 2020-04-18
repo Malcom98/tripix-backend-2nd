@@ -25,6 +25,7 @@ class RouteController extends Controller
             'user_id'=>'required',
             'location'=>'required',
             'duration'=>'required',
+            'route'=>'required',
             'distance'=>'required',
             'locations'=>'required'
         ];
@@ -105,7 +106,7 @@ class RouteController extends Controller
                     "route_id"=>$route->id,
                     "location"=>$route->location,
                     "locations"=>$routeItemsArray,
-                    "route"=>"TO DO!!!!",
+                    "route"=>$route->route,
                     "duration"=>$route->total_time,
                     "distance"=>$route->total_distance
                 ];
@@ -150,6 +151,7 @@ class RouteController extends Controller
         $location=$request->location;
         $user_id=$request->user_id;
         $status_id=1;
+        $polyline=$request->route;
         $total_time=$request->duration;
         $total_distance=$request->distance;
 
@@ -158,6 +160,7 @@ class RouteController extends Controller
         $route->location=$location;
         $route->user_id=$user_id;
         $route->status_id=$status_id;
+        $route->route=$polyline;
         $route->total_time=$total_time;
         $route->total_distance=$total_distance;
         $route->save();
