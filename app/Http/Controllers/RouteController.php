@@ -12,6 +12,8 @@ use \Firebase\JWT\JWT;
 
 class RouteController extends Controller
 {
+    //Planned route
+    //This function is called when user presses "Create" on "Route Overview" screen
     public function plannedRoute(Request $request){
         //JWT Validation
         if(!self::JWTValidation($request)){
@@ -42,6 +44,8 @@ class RouteController extends Controller
         return response()->json(["Message"=>"Ok","RouteId"=>$newRouteId],200);
     }
 
+    //Start route
+    //This function is called when user presses "Start" on "Route Overview with Map" screen
     public function startRoute(Request $request){
         //JWT Validation
         if(!self::JWTValidation($request)){
@@ -61,12 +65,39 @@ class RouteController extends Controller
         //Get route from database
         $route=Route::where('id',$request->route_id)->get();
         if(count($route)==0){
-            return response()->json(["Error"=>"That ID does not exist."],400);
+            return response()->json(["Error"=>"Route with this ID does not exist."],400);
         }
 
         //Update route
         Route::where('id',$request->route_id)->update(['status_id'=>2]);
         return response()->json(["Message"=>"Route started."],200);
+    }
+
+    //Finish route
+    //This function is called when user reaches his last landmark on map
+    public function finishRoute(Request $request){
+        //JWT validation
+        if(!self::JWTValidation($request))
+            return response()->json(["Error"=>"Unauthorized"],401);
+
+        //Validation
+        $rules=[
+            'route_id'=>'required'
+        ];
+
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails())
+            return response()->json(["Error"=>"Bad request"],400);
+
+        //Check if route exists
+        $route_id=$request->route_id;
+        if(count(Route::where('id',$route_id)->get())==0)
+            return response()->json(["Error"=>"Route with this ID does not exist."]);
+
+        //Update
+        Route::where('id',$route_id)->update(['status_id'=>'3']);
+        return response()->json(["Message"=>"Route successfully finished. Congratulations!"],202);
+
     }
 
     /* ------------------ Other functions ------------------------- */
