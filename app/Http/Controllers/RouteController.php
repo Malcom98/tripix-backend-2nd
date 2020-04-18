@@ -24,7 +24,7 @@ class RouteController extends Controller
         $rules=[
             'user_id'=>'required',
             'location'=>'required',
-            'time'=>'required',
+            'duration'=>'required',
             'distance'=>'required',
             'locations'=>'required'
         ];
@@ -65,7 +65,7 @@ class RouteController extends Controller
         }else{
             //Validation
             $rules=[
-                'used_id'=>'required'
+                'user_id'=>'required'
             ];
 
             $validator=Validator::make($request->all(),$rules);
@@ -73,8 +73,47 @@ class RouteController extends Controller
                 return response()->json($validator->errors(),400);
             }
 
-            //
-            
+            //Get data from request
+            $user_id=$request->user_id;
+            //Get routes
+            $startedRoutes=Route::where('user_id',$user_id)->where('status_id',2)->get(); // Started routes
+            $plannedRoutes=Route::where('user_id',$user_id)->where('status_id',1)->get(); // Planned routes
+            $returnPlannedRoutes=array(); // Array of objects to be returned
+
+            //For started/planned route
+            foreach($plannedRoutes as $route){
+                //Get route items
+                $routeItems=RouteItem::where('route_id',$route->id)->get();  
+
+                //Put route items in routeItemsArray object
+                $routeItemsArray=array();
+                foreach($routeItems as $routeItem){
+                    $routeItemObject=[
+                        "name"=>"TO DO!!!",
+                        "place_id"=>$routeItem->place_reference,
+                        "latitude"=>$routeItem->latitude,
+                        "longitude"=>$routeItem->longitude,
+                        "duration"=>$routeItem->time,
+                        "distance"=>$routeItem->distance,
+                        "photo_reference"=>"TO DO!!!"
+                    ];
+                    array_push($routeItemsArray,$routeItemObject);
+                }
+
+
+                $plannedRouteObject=[
+                    "route_id"=>$route->id,
+                    "location"=>$route->location,
+                    "locations"=>$routeItemsArray,
+                    "route"=>"TO DO!!!!",
+                    "duration"=>$route->total_time,
+                    "distance"=>$route->total_distance
+                ];
+                array_push($returnPlannedRoutes,$plannedRouteObject);
+            }
+
+            //Returning array of planned route objects
+            return $returnPlannedRoutes;
         }
     }
 
@@ -111,7 +150,7 @@ class RouteController extends Controller
         $location=$request->location;
         $user_id=$request->user_id;
         $status_id=1;
-        $total_time=$request->time;
+        $total_time=$request->duration;
         $total_distance=$request->distance;
 
         //Put info into database
@@ -138,7 +177,7 @@ class RouteController extends Controller
             $routeItem->order=$order_counter;
             $routeItem->latitude=$location["latitude"];
             $routeItem->longitude=$location["longitude"];
-            $routeItem->time=$location["time"];
+            $routeItem->time=$location["duration"];
             $routeItem->distance=$location["distance"];
             $routeItem->transport_type_id=$transport_type_id;
             $routeItem->completed=0;
