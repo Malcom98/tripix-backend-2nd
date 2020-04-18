@@ -14,7 +14,7 @@ class RouteController extends Controller
 {
     //Planned route
     //This function is called when user presses "Create" on "Route Overview" screen
-    public function plannedRoute(Request $request){
+    public function planRoute(Request $request){
         //JWT Validation
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
@@ -24,8 +24,8 @@ class RouteController extends Controller
         $rules=[
             'user_id'=>'required',
             'location'=>'required',
-            'total_time'=>'required',
-            'total_distance'=>'required',
+            'time'=>'required',
+            'distance'=>'required',
             'locations'=>'required'
         ];
 
@@ -56,6 +56,32 @@ class RouteController extends Controller
         return self::ChangeRouteStatus($request,'3','Route finished successfully. Congratulations.');
     }
 
+    //Get my planned routes
+    //Returns status id 1 and 2
+    public function getPlannedRoutes(Request $request){
+        //JWT validation
+        if(!self::JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized"],401);
+        }else{
+            //Validation
+            $rules=[
+                'used_id'=>'required'
+            ];
+
+            $validator=Validator::make($request->all(),$rules);
+            if($validator->fails()){
+                return response()->json($validator->errors(),400);
+            }
+
+            //
+            
+        }
+    }
+
+    //Get my suggested routes
+    //Returns status id 3
+
+
     /* ------------------ Other functions ------------------------- */
     private function ChangeRouteStatus($request,$status_id,$message){
         if(!self::JWTValidation($request))
@@ -85,8 +111,8 @@ class RouteController extends Controller
         $location=$request->location;
         $user_id=$request->user_id;
         $status_id=1;
-        $total_time=$request->total_time;
-        $total_distance=$request->total_distance;
+        $total_time=$request->time;
+        $total_distance=$request->distance;
 
         //Put info into database
         $route=new Route();
