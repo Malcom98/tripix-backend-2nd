@@ -33,6 +33,7 @@ class LoginController extends Controller
             $userModel=UserModel::where('email',$email)->get(); //Get that user
             $userModelVerificationCode=$userModel[0]->verified; // Gets user verification code
             $userModelPassword= $userModel[0]->password; // Get users password
+            $userModelName= $userModel[0]->name; // Get users name
 
             //Check if user verified it's account
             if($userModelVerificationCode!="None."){
@@ -50,7 +51,7 @@ class LoginController extends Controller
             );
 
             $jwt = JWT::encode($payload, $key);
-            return response()->json(["message"=>"Successfuly logged in.","token"=>$jwt,"user_id"=>$userModel[0]->id],200);
+            return response()->json(["message"=>"Successfuly logged in.","token"=>$jwt,"user_id"=>$userModel[0]->id,"full_name"=>$userModelName],200);
         }
     }
 }
