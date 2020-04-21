@@ -57,9 +57,15 @@ class RouteController extends Controller
         return self::ChangeRouteStatus($request,'3','Route finished successfully. Congratulations.');
     }
 
+
     //Get my planned route
     public function getPlannedRoutes(Request $request){
         return self::getSpecificGroupRoutes($request,'1');
+    }
+
+    //Get started routes
+    public function getStartedRoutes(Request $request){
+        return self::getSpecificGroupRoutes($request,'2');
     }
 
     //Get my finished route
