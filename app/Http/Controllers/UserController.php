@@ -121,7 +121,10 @@ class UserController extends Controller
 
         if($user[0]->verified==$activation_code){
             UserModel::where('email',$email)->update(['verified'=>'None.']);
-            return response()->json(["message"=>"Account sucessfully verified."],200);
+            $user_id=$user[0]->id;
+            $user_fullname=$user[0]->name;
+            $token=self::GenerateToken($user[0]->email,$user[0]->password);
+            return response()->json(["message"=>"Account sucessfully verified.","user_id"=>$user_id,"full_name"=>$user_fullname,"token"=>$token],200);
         }else{
             return response()->json(["message"=>"Invalid activation code."],403);
         }
@@ -161,7 +164,7 @@ class UserController extends Controller
         if(count(UserModel::where('email',$email)->where('pwdresetcode',$resetCode)->get())!=0){
             return response()->json(["message"=>"Valid code."],200);
         }else{
-            return response()->json(["message"=>"Invalid code."],200);
+            return response()->json(["message"=>"Invalid code."],400);
         }
     }
 
@@ -275,6 +278,16 @@ class UserController extends Controller
 
 
     //------------------------ Other functions ---------------------
+    public function GenerateToken($email,$password){
+        $key=env('JWT_SECRET_KEY','somedefaultvalue');
+        $payload = array(
+            "email"=>$email,
+            "password"=> $password
+        );
+        $jwt = JWT::encode($payload, $key);
+        return $jwt;
+    }
+
     public function CheckIfUserExists(Request $request){
         //Decode JWT
         $jwt=$request->header('Authorization');
