@@ -62,3 +62,4 @@ Route::post('/route/plan_route','RouteController@planRoute');
 Route::post('/route/start_route','RouteController@startRoute');
 Route::post('/route/finish_route','RouteController@finishRoute');
 Route::post('/route/get_planned_routes','RouteController@getPlannedRoutes');
+Route::post('/route/get_finished_routes','RouteController@getFinishedRoutes');
