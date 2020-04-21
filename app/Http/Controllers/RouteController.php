@@ -57,9 +57,55 @@ class RouteController extends Controller
         return self::ChangeRouteStatus($request,'3','Route finished successfully. Congratulations.');
     }
 
-    //Get my planned routes
+    //Get my planned route
     //Returns status id 1 and 2
     public function getPlannedRoutes(Request $request){
+        //JWT validation
+        if(!self::JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized."],401);
+        }else{
+            //Validator
+            $rules=[
+                'user_id'=>'required'
+            ];
+
+            $validator=Validator::make($request->all(),$rules);
+            if($validator->fails()){
+                return response()->json($validator->errors(),400);
+            }
+
+            //Check if user input is correct
+            $user_id=$request->user_id;
+            $user=UserModel::where('id',$user_id)->get();
+            if(count($user)==0){
+                return response()->json(["Message"=>"There is no user with given ID."],400);
+            }
+            
+            //GetPlannedRoutes
+            $routes=Route::where('user_id',$user_id)->get();
+            $plannedRoutes=array();
+            foreach($routes as $route){
+                $route_id=$route->id;
+                $location=$route->location;
+                $duration=$route->total_time;
+                $date=explode(' ',$route->created_at)[0];
+
+                $routeItems=RouteItem::where('route_id',$route_id)->get();
+                $number_attractions=count($routeItems);
+                $photo_reference=$routeItems[0]->photo_reference;
+
+                $newItem=["route_id"=>$route_id,"location"=>$location,"photo_ref"=>$photo_reference,
+                            "number_attractions"=>$number_attractions,"duration"=>$duration, "date"=>$date];
+                array_push($plannedRoutes,$newItem);
+            }
+
+            return response()->json($plannedRoutes,200);
+        }
+    }
+    
+
+    //Get specific route by id -> MUST BE CHANGED
+    public function getSpecificPlannedRoute(Request $request){
         //JWT validation
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
