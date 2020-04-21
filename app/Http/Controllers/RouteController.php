@@ -58,9 +58,13 @@ class RouteController extends Controller
     }
 
     //Get my planned route
-    //Returns status id 1 and 2
     public function getPlannedRoutes(Request $request){
         return self::getSpecificGroupRoutes($request,'1');
+    }
+
+    //Get my finished route
+    public function getFinishedRoutes(Request $request){
+        return self::getSpecificGroupRoutes($request,'3');
     }
 
     //This function is used to get certain status_id routes
@@ -110,7 +114,7 @@ class RouteController extends Controller
     
 
     //Get specific route by id -> MUST BE CHANGED
-    public function getSpecificPlannedRoute(Request $request){
+    public function getSpecificRoute(Request $request){
         //JWT validation
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
