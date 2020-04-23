@@ -14,8 +14,8 @@ class AddNameAndPhotoReferenceToRouteItems extends Migration
     public function up()
     {
         Schema::table('route_items',function(Blueprint $table){
-            $table->string('name')->default("None");
-            $table->string('photo_reference')->default("None");
+            $table->string('name')->nullable();
+            $table->string('photo_reference')->nullable();
         });
     }
 

@@ -115,12 +115,12 @@ class UserController extends Controller
         $activation_code=$request->activation_code;
 
         $user=UserModel::where('email',$email)->get();
-        if($user[0]->verified=="None."){
+        if(strlen($user[0]->verified)==0){
             return response()->json(["message"=>"Account has already been validated."],200);
         }
 
         if($user[0]->verified==$activation_code){
-            UserModel::where('email',$email)->update(['verified'=>'None.']);
+            UserModel::where('email',$email)->update(['verified'=>null]);
             $user_id=$user[0]->id;
             $user_fullname=$user[0]->name;
             $token=self::GenerateToken($user[0]->email,$user[0]->password);
