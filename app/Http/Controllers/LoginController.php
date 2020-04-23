@@ -36,7 +36,7 @@ class LoginController extends Controller
             $userModelName= $userModel[0]->name; // Get users name
 
             //Check if user verified it's account
-            if($userModelVerificationCode!="None."){
+            if(strlen($userModelVerificationCode)){
                 return response()->json(["message"=>"Account not verified yet."],403);
             }
 
