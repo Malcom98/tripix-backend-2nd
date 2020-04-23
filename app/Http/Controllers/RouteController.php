@@ -127,7 +127,7 @@ class RouteController extends Controller
         }else{
             //Validation
             $rules=[
-                'user_id'=>'required'
+                'route_id'=>'required'
             ];
 
             $validator=Validator::make($request->all(),$rules);
@@ -136,46 +136,39 @@ class RouteController extends Controller
             }
 
             //Get data from request
-            $user_id=$request->user_id;
-            //Get routes
-            $startedRoutes=Route::where('user_id',$user_id)->where('status_id',2)->get(); // Started routes
-            $plannedRoutes=Route::where('user_id',$user_id)->where('status_id',1)->get(); // Planned routes
-            $returnPlannedRoutes=array(); // Array of objects to be returned
+            $route_id=$request->route_id;
+            
+            //Get route items
+            $route=Route::where('id',$route_id)->get();
+            $routeItems=RouteItem::where('route_id',$route_id)->get();  
 
-            //For started/planned route
-            foreach($plannedRoutes as $route){
-                //Get route items
-                $routeItems=RouteItem::where('route_id',$route->id)->get();  
-
-                //Put route items in routeItemsArray object
-                $routeItemsArray=array();
-                foreach($routeItems as $routeItem){
-                    $routeItemObject=[
-                        "name"=>$routeItem->name,
-                        "place_id"=>$routeItem->place_reference,
-                        "latitude"=>$routeItem->latitude,
-                        "longitude"=>$routeItem->longitude,
-                        "duration"=>$routeItem->time,
-                        "distance"=>$routeItem->distance,
-                        "photo_reference"=>$routeItem->photo_reference
-                    ];
-                    array_push($routeItemsArray,$routeItemObject);
-                }
-
-
-                $plannedRouteObject=[
-                    "route_id"=>$route->id,
-                    "location"=>$route->location,
-                    "locations"=>$routeItemsArray,
-                    "route"=>$route->route,
-                    "duration"=>$route->total_time,
-                    "distance"=>$route->total_distance
+            //Put route items in routeItemsArray object
+            $routeItemsArray=array();
+            foreach($routeItems as $routeItem){
+                $routeItemObject=[
+                    "name"=>$routeItem->name,
+                    "place_id"=>$routeItem->place_reference,
+                    "latitude"=>$routeItem->latitude,
+                    "longitude"=>$routeItem->longitude,
+                    "duration"=>$routeItem->time,
+                    "distance"=>$routeItem->distance,
+                    "photo_reference"=>$routeItem->photo_reference
                 ];
-                array_push($returnPlannedRoutes,$plannedRouteObject);
+                array_push($routeItemsArray,$routeItemObject);
             }
 
+
+            $specificRoute=[
+                "route_id"=>$route[0]->id,
+                "location"=>$route[0]->location,
+                "locations"=>$routeItemsArray,
+                "route"=>$route[0]->route,
+                "duration"=>$route[0]->total_time,
+                "distance"=>$route[0]->total_distance
+            ];
+
             //Returning array of planned route objects
-            return $returnPlannedRoutes;
+            return $specificRoute;
         }
     }
 
