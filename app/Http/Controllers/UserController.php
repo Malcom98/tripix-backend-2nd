@@ -186,7 +186,7 @@ class UserController extends Controller
         $hashedPassword=bcrypt($new_password);
 
         if(count(UserModel::where('email',$email)->where('pwdresetcode',$reset_code)->get())!=0){
-            UserModel::where('email',$email)->where('pwdresetcode',$reset_code)->update(['password'=>$hashedPassword]);
+            UserModel::where('email',$email)->where('pwdresetcode',$reset_code)->update(['password'=>$hashedPassword,'pwdresetcode'=>null]);
             return response()->json(["message"=>"Password successfully changed."],200);
         }else{
             return response()->json(["message"=>"Invalid data."],403);
@@ -324,7 +324,7 @@ class UserController extends Controller
         $verificationCode="";
         $letters="12345678901234567890";
         for($i=0;$i<6;$i++){
-            $verificationCode.=$letters[rand(1,20)];
+            $verificationCode.=$letters[rand(1,15)];
         }
         return $verificationCode;
     }
