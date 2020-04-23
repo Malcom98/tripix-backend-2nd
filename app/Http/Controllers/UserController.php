@@ -161,7 +161,7 @@ class UserController extends Controller
         $email=$request->email;
         $resetCode=$request->reset_code;
 
-        if(count(UserModel::where('email',$email)->where('pwdresetcode',$resetCode)->get())!=0){
+        if(strlen($resetCode) && count(UserModel::where('email',$email)->where('pwdresetcode',$resetCode)->get())!=0){
             return response()->json(["message"=>"Valid code."],200);
         }else{
             return response()->json(["message"=>"Invalid code."],400);
@@ -171,7 +171,8 @@ class UserController extends Controller
     public function newPassword(Request $request){
         //Validator
         $rules=[
-            'new_password'=>'required|min:6'
+            'new_password'=>'required|min:6',
+            'reset_code'=>'required|min:4'
         ];
 
         $validator=Validator::make($request->all(),$rules);
