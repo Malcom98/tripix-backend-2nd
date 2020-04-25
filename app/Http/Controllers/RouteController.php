@@ -96,7 +96,9 @@ class RouteController extends Controller
 
                 $routeItems=RouteItem::where('route_id',$route_id)->get();
                 $number_attractions=count($routeItems);
-                $photo_reference=$routeItems[0]->photo_reference;
+                $photo_reference="null";
+                if(isset($routeItems[0]))
+                    $photo_reference=$routeItems[0]->photo_reference;
 
                 $newItem=["route_id"=>$route_id,"location"=>$location,"photo_ref"=>$photo_reference,
                             "number_attractions"=>$number_attractions,"duration"=>$duration, "date"=>$date];
@@ -106,6 +108,7 @@ class RouteController extends Controller
             return response()->json($plannedRoutes,200);
         }
     }
+
     
 
     //Get specific route by id -> MUST BE CHANGED
