@@ -86,7 +86,7 @@ class RouteController extends Controller
             }
             
             //GetPlannedRoutes
-            $routes=Route::where('user_id',$user_id)->where('status_id',$status_id)->get();
+            $routes=Route::where('user_id',$user_id)->where('status_id',$status_id)->orderBy('id','desc')->get();
             $plannedRoutes=array();
             foreach($routes as $route){
                 $route_id=$route->id;
@@ -156,6 +156,7 @@ class RouteController extends Controller
     //Returns status id 3
 
 
+    //This function returns place description.
     public function getPlaceDescription(Request $request,$id){
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
