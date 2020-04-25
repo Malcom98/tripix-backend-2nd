@@ -59,38 +59,27 @@ class RouteController extends Controller
 
 
     //Get my planned route
-    public function getPlannedRoutes(Request $request){
-        return self::getSpecificGroupRoutes($request,'1');
+    public function getPlannedRoutes(Request $request,$id){
+        return self::getSpecificGroupRoutes($request,'1',$id);
     }
 
     //Get started routes
-    public function getStartedRoutes(Request $request){
-        return self::getSpecificGroupRoutes($request,'2');
+    public function getStartedRoutes(Request $request,$id){
+        return self::getSpecificGroupRoutes($request,'2',$id);
     }
 
     //Get my finished route
-    public function getFinishedRoutes(Request $request){
-        return self::getSpecificGroupRoutes($request,'3');
+    public function getFinishedRoutes(Request $request,$id){
+        return self::getSpecificGroupRoutes($request,'3',$id);
     }
 
     //This function is used to get certain status_id routes
-    public function getSpecificGroupRoutes($request,$status_id){
+    public function getSpecificGroupRoutes($request,$status_id,$user_id){
         //JWT validation
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
         }else{
-            //Validator
-            $rules=[
-                'user_id'=>'required'
-            ];
-
-            $validator=Validator::make($request->all(),$rules);
-            if($validator->fails()){
-                return response()->json($validator->errors(),400);
-            }
-
             //Check if user input is correct
-            $user_id=$request->user_id;
             $user=UserModel::where('id',$user_id)->get();
             if(count($user)==0){
                 return response()->json(["Message"=>"There is no user with given ID."],400);
@@ -120,23 +109,13 @@ class RouteController extends Controller
     
 
     //Get specific route by id -> MUST BE CHANGED
-    public function getSpecificRoute(Request $request){
+    public function getSpecificRoute(Request $request,$id){
         //JWT validation
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{
-            //Validation
-            $rules=[
-                'route_id'=>'required'
-            ];
-
-            $validator=Validator::make($request->all(),$rules);
-            if($validator->fails()){
-                return response()->json($validator->errors(),400);
-            }
-
             //Get data from request
-            $route_id=$request->route_id;
+            $route_id=$id;
             
             //Get route items
             $route=Route::where('id',$route_id)->get();
