@@ -47,6 +47,7 @@ class GoogleAPIController extends Controller
         }
         
         //return $coordinates;
+
         //Place IDs
         $place_ids=array();
         //Add first location
@@ -57,12 +58,19 @@ class GoogleAPIController extends Controller
         }
         //Add last location
         array_push($place_ids,$googleDirectionsResponse->geocoded_waypoints[count($waypoints)+1]->place_id);
-        //return $place_ids;
 
-        return self::findBestDescription("lol");
+        //Place descriptions
+        $place_descriptions=array();
+        for($i=0;$i<count($place_ids);$i++){
+            $description=self::findBestDescription($place_ids[$i]);
+            array_push($place_descriptions,$description);
+        }
+        //return $place_descriptions;
+
+
 
         //Adding origin to locations
-        $originObject=self::createOriginObject($origin);
+        $originObject=self::createOriginObject($origin,$place_descriptions[0]);
         array_push($locations,$originObject);
 
         //Adding landmarks to location
@@ -84,6 +92,7 @@ class GoogleAPIController extends Controller
 
             $waypoint=[
                 //"place_id"=>$place_ids[$counter-1],
+                "description"=>$place_descriptions[$counter],
                 "latitude"=>$place_latitude,
                 "longitude"=>$place_longitude,
                 "duration"=>$place_duration,
@@ -98,7 +107,7 @@ class GoogleAPIController extends Controller
         }
 
         //Adding destination to locations array
-        $destinationObject=self::createDestinationObject($destination,$destination_duration,$destination_distance);
+        $destinationObject=self::createDestinationObject($destination,$destination_duration,$destination_distance,$place_descriptions[count($place_ids)-1]);
         array_push($locations,$destinationObject);
 
         //Forming response object
@@ -115,7 +124,8 @@ class GoogleAPIController extends Controller
 
     //This function best rated description about certain attraction
     private function findBestDescription($place_id){
-        $apiResponse=file_get_contents('https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE');
+        $apiResponse=file_get_contents('https://maps.googleapis.com/maps/api/place/details/json?place_id='.$place_id.'&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE');
+        //$apiResponse=file_get_contents('https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE');
         //$apiResponse=file_get_contents('https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJGfB4DLKlaEcR_Wjj2tXMYDI&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE');
 
         //If there are no reviews about attraction
@@ -149,9 +159,10 @@ class GoogleAPIController extends Controller
     }
 
     //This function creates origin object
-    private function createOriginObject($origin){
+    private function createOriginObject($origin,$description){
         $originObject=[
             //"place_id"=>$place_id,
+            "description"=>$description,
             "latitude"=>$origin["lat"],
             "longitude"=>$origin["long"],
             "duration"=>"0",
@@ -162,8 +173,9 @@ class GoogleAPIController extends Controller
     }
 
     //This function creates destination object
-    private function createDestinationObject($destination,$duration,$distance){
+    private function createDestinationObject($destination,$duration,$distance,$description){
         $destinationObject=[
+            "description"=>$description,
             "latitude"=>$destination["lat"],
             "longitude"=>$destination["long"],
             "duration"=>$duration,
