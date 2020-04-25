@@ -48,26 +48,6 @@ class GoogleAPIController extends Controller
         
         //return $coordinates;
 
-        //Place IDs
-        $place_ids=array();
-        //Add first location
-        array_push($place_ids,$googleDirectionsResponse->geocoded_waypoints[0]->place_id); 
-        //Add waypoints
-        for($i=0;$i<count($waypoints);$i++){
-            array_push($place_ids,$googleDirectionsResponse->geocoded_waypoints[$i+1]->place_id); 
-        }
-        //Add last location
-        array_push($place_ids,$googleDirectionsResponse->geocoded_waypoints[count($waypoints)+1]->place_id);
-        //return $place_ids;
-
-        //Place descriptions
-        $place_descriptions=array();
-        for($i=0;$i<count($place_ids);$i++){
-            $description=self::findBestDescription($place_ids[$i]);
-            array_push($place_descriptions,$description);
-        }
-       // return $place_descriptions;
-
         //Adding origin to locations
         $originObject=self::createOriginObject($origin);
         array_push($locations,$originObject);
