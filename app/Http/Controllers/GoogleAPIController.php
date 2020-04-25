@@ -57,7 +57,9 @@ class GoogleAPIController extends Controller
         }
         //Add last location
         array_push($place_ids,$googleDirectionsResponse->geocoded_waypoints[count($waypoints)+1]->place_id);
-        return $place_ids;
+        //return $place_ids;
+
+        return self::findBestDescription("lol");
 
         //Adding origin to locations
         $originObject=self::createOriginObject($origin);
@@ -81,7 +83,7 @@ class GoogleAPIController extends Controller
             $place_distance=explode(' ',$path->distance->text)[0];
 
             $waypoint=[
-                //"place_id"=>$place_id,
+                //"place_id"=>$place_ids[$counter-1],
                 "latitude"=>$place_latitude,
                 "longitude"=>$place_longitude,
                 "duration"=>$place_duration,
@@ -109,6 +111,30 @@ class GoogleAPIController extends Controller
 
         //Returning JSON object
         return json_encode($response_object);
+    }
+
+    //This function best rated description about certain attraction
+    private function findBestDescription($place_id){
+        $apiResponse=file_get_contents('https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE');
+        //$apiResponse=file_get_contents('https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJGfB4DLKlaEcR_Wjj2tXMYDI&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE');
+
+        //If there are no reviews about attraction
+        if(!isset(json_decode($apiResponse)->result->reviews)){
+            return "There is no comment about this attraction yet. You might be the first one to rate & comment it. :-)";
+        }
+        //Else take best rated comment
+        $reviewsObject=json_decode($apiResponse)->result->reviews;
+
+        $bestRating=-1;
+        $description="";
+        foreach($reviewsObject as $review){
+            if($review->rating>$bestRating){
+                $bestRating=$review->rating;
+                $description=$review->text;
+            }
+        }
+
+        return $description;
     }
 
     //This function is used to generate link for google directions api
