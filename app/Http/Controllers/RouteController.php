@@ -84,6 +84,15 @@ class RouteController extends Controller
             if(count($user)==0){
                 return response()->json(["Message"=>"There is no user with given ID."],400);
             }
+
+            //Authenticate user request
+            $email=$user[0]->email;
+            $jwt=$request->header('Authorization');
+            $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
+            $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
+            $decoded = JWT::decode($jwt, $key, array('HS256'));
+            if($email!=$decoded->email)
+                return response()->json(["Error"=>"Forbidden."],403);
             
             //GetPlannedRoutes
             $routes=Route::where('user_id',$user_id)->where('status_id',$status_id)->orderBy('id','desc')->get();
