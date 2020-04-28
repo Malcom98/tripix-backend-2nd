@@ -154,30 +154,51 @@ class GoogleAPIController extends Controller
 
             $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=1500&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
             $response=json_decode(file_get_contents($link));
-            
-            return response()->json($response,200);
+            $response=$response->results;
+
+            $responseArray=array();
+            foreach($response as $r){
+                    if(isset($r->photos[0]->photo_reference) && isset($r->rating)){
+                    $place_id=$r->place_id;
+                    $latitude=$r->geometry->location->lat;
+                    $longitude=$r->geometry->location->lng;
+                    $photo_reference=$r->photos[0]->photo_reference;
+                    $rating=$r->rating;
+                    $name=$r->name;
+
+                    $ro=[
+                        "place_id"=>$place_id,
+                        "latitude"=>$latitude,
+                        "longitude"=>$longitude,
+                        "photo_reference"=>$photo_reference,
+                        "rating"=>$rating,
+                        "name"=>$name
+                    ];
+                    array_push($responseArray,$ro);
+                }
+            }
+
+            return $responseArray;
         }
     }
 
     //Specific get nearby functions
     public function getNearbyRestaurants(Request $request){
-        return self::getNearby($request,"restaurant");
+        $restaurants = self::getNearby($request,"restaurant");
+        return response()->json($restaurants,200);
     }
 
     public function getNearbyCafes(Request $request){
         $bar_json=self::getNearby($request,"bar");
         $cafe_json=self::getNearby($request,"cafe");
-        return ["bar_group"=>$bar_json,
-                "cafe_group"=>$cafe_json];
+        return array_merge($bar_json,$cafe_json);
     }
 
     public function getNearbyShops(Request $request){
         $shopping_mall_json=self::getNearby($request,"shopping_mall");
         $store_json=self::getNearby($request,"store");
         $supermarket_json=self::getNearby($request,"supermarket");
-        return ["shopping_mall_group"=>$shopping_mall_json,
-                "store_group"=>$store_json,
-                "supermarket_group"=>$supermarket_json];
+        return array_merge($shopping_mall_json,$store_json,$supermarket_json);
     }
 
     public function getNearbyAttractions(Request $request){
@@ -193,17 +214,9 @@ class GoogleAPIController extends Controller
         $park_json=self::getNearby($request,"park");
         $stadium_json=self::getNearby($request,"stadium");
 
-        return ["tourist_attraction_group"=>$tourist_attraction_json,
-        "amusement_park_group"=>$amusement_park_json,
-        "art_gallery_group"=>$art_gallery_json,
-        "synagogue_group"=>$synagogue_json,
-        "city_hall_group"=>$city_hall_json,
-        "courthouse_group"=>$courthouse_json,
-        "embassy_group"=>$embassy_json,
-        "museum_group"=>$museum_json,
-        "library_group"=>$library_json,
-        "park_group"=>$park_json,
-        "stadium_group"=>$stadium_json];
+        return array_merge($tourist_attraction_json,$amusement_park_json,$art_gallery_json,
+                $synagogue_json,$city_hall_json,$courthouse_json,$embassy_json,
+                $library_json,$park_json,$stadium_json);
     }
 
     //Used GeoNames API
