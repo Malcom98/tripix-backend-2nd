@@ -191,14 +191,17 @@ class GoogleAPIController extends Controller
     public function getNearbyCafes(Request $request){
         $bar_json=self::getNearby($request,"bar");
         $cafe_json=self::getNearby($request,"cafe");
-        return array_merge($bar_json,$cafe_json);
+        $mergedArray=array_merge($bar_json,$cafe_json);
+        $mergedArray=self::RemoveDuplicates($mergedArray);
+        return response()->json($mergedArray,200);
     }
 
     public function getNearbyShops(Request $request){
         $shopping_mall_json=self::getNearby($request,"shopping_mall");
         $store_json=self::getNearby($request,"store");
         $supermarket_json=self::getNearby($request,"supermarket");
-        return array_merge($shopping_mall_json,$store_json,$supermarket_json);
+        $mergedArray=  array_merge($shopping_mall_json,$store_json,$supermarket_json);
+        return response()->json($mergedArray,200);
     }
 
     public function getNearbyAttractions(Request $request){
@@ -214,9 +217,10 @@ class GoogleAPIController extends Controller
         $park_json=self::getNearby($request,"park");
         $stadium_json=self::getNearby($request,"stadium");
 
-        return array_merge($tourist_attraction_json,$amusement_park_json,$art_gallery_json,
+        $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,$art_gallery_json,
                 $synagogue_json,$city_hall_json,$courthouse_json,$embassy_json,
                 $library_json,$park_json,$stadium_json);
+        return response()->json($mergedArray,200);
     }
 
     //Used GeoNames API
