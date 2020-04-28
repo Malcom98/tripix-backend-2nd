@@ -244,7 +244,7 @@ class RouteController extends Controller
             $routeItem->place_reference=$location["place_id"];
             $routeItem->order=$order_counter;
             $routeItem->latitude=$location["latitude"];
-            $routeItem->description=$location["description"];
+            //$routeItem->description=$location["description"];
             $routeItem->longitude=$location["longitude"];
             $routeItem->time=$location["duration"];
             $routeItem->distance=$location["distance"];
