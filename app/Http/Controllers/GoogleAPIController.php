@@ -61,6 +61,8 @@ class GoogleAPIController extends Controller
             if($counter==count($googleDirectionsResponse->routes[0]->legs)){
                 $destination_duration=explode(' ',$path->duration->text)[0];
                 $destination_distance=explode(' ',$path->distance->text)[0];
+                $total_distance+=explode(' ',$path->distance->text)[0];
+                $total_duration+=explode(' ',$path->duration->text)[0];
                 break;
             }
 
