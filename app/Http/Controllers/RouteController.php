@@ -57,6 +57,21 @@ class RouteController extends Controller
         return self::ChangeRouteStatus($request,'3','Route finished successfully. Congratulations.');
     }
 
+    //Suggested routes
+    public function getSuggestedRoutes(Request $request,$place){
+        //JWT validation
+        if(!self::JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized."],401);
+        }else{
+            //Get coordinates of a given city
+            $url="https://maps.googleapis.com/maps/api/geocode/json?address=".rawurlencode($place)."&key=".env("GOOGLE_API_KEY", "somedefaultvalue"); 
+            $googleApiResponse=file_get_contents($url);
+            $googleApiResponse=json_decode($googleApiResponse);
+            $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
+            $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
+        }
+    }
+    //This function is used to 
 
     //Get my planned route
     public function getPlannedRoutes(Request $request,$id){
@@ -160,10 +175,6 @@ class RouteController extends Controller
             return $specificRoute;
         }
     }
-
-    //Get my suggested routes
-    //Returns status id 3
-
 
     //This function returns place description.
     public function getPlaceDescription(Request $request,$id){
