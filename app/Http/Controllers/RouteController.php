@@ -58,6 +58,13 @@ class RouteController extends Controller
     }
 
     //Suggested routes
+    //This function generates a suggested route based on random location.
+    //User must send param place in his request and the algorithm will find
+    //longitude and latitude of given place.
+    //After that, algorithm will search for all attractions with rating 3+ in range of 10 kilometers.
+    //Mini route will last 1 hour.
+    //Middle route will last 3 hours.
+    //Large route will last 5 hours.
     public function getSuggestedRoutes(Request $request,$place){
         //JWT validation
         if(!self::JWTValidation($request)){
@@ -69,6 +76,69 @@ class RouteController extends Controller
             $googleApiResponse=json_decode($googleApiResponse);
             $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
             $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
+            //Needed arrays
+            $route=array();
+            $totalTime=0;
+            //Get nearby attractions
+            $url="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=10000&type=tourist_attraction&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+            $googleApiResponse=file_get_contents($url);
+            $googleApiResponse=json_decode($googleApiResponse);
+            $numberOfAttractions=count($googleApiResponse->results);
+            $randomNumber=rand(0,$numberOfAttractions-1);
+            $currentAttraction=$googleApiResponse->results[$randomNumber];
+
+            //Get first location
+            while(!isset($currentAttraction->photos[0]->photo_reference)){
+                $randomNumber=rand(0,$numberOfAttractions-1);
+                $currentAttraction=$googleApiResponse->results[$randomNumber];
+            }
+            $object=[
+                "place_id"=>$currentAttraction->place_id,
+                "latitude"=>$currentAttraction->geometry->location->lat,
+                "longitude"=>$currentAttraction->geometry->location->lng,
+                "photo_reference"=>$currentAttraction->photos[0]->photo_reference,
+                "rating"=>$currentAttraction->rating,
+                "name"=>$currentAttraction->name
+            ];
+            array_push($route,$object);
+            //return $route;
+
+            //Get other locations
+            $counter=1;
+            while($totalTime<60){
+                $startLocationLatitude=$route[$counter-1]["latitude"];
+                $startLocationLongitude=$route[$counter-1]["longitude"];
+                $url="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$startLocationLatitude.",".$startLocationLongitude."&radius=10000&type=tourist_attraction&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+                $googleApiResponse=file_get_contents($url);
+                $googleApiResponse=json_decode($googleApiResponse);
+                $numberOfAttractions=count($googleApiResponse->results);
+                $randomNumber=rand(0,$numberOfAttractions-1);
+                $currentAttraction=$googleApiResponse->results[$randomNumber];
+                
+                /*while(!isset($currentAttraction->photos[0]->photo_reference)){
+                    $randomNumber=rand(0,$numberOfAttractions-1);
+                    $currentAttraction=$googleApiResponse->results[$randomNumber];
+                }*/
+                $object=[
+                    "place_id"=>$currentAttraction->place_id,
+                    "latitude"=>$currentAttraction->geometry->location->lat,
+                    "longitude"=>$currentAttraction->geometry->location->lng,
+                    "photo_reference"=>$currentAttraction->photos[0]->photo_reference,
+                    "rating"=>$currentAttraction->rating,
+                    "name"=>$currentAttraction->name
+                ];
+                array_push($route,$object);
+
+                $url="https://maps.googleapis.com/maps/api/directions/json?origin=".$startLocationLatitude.",".$startLocationLongitude;
+                $url.="&destination=".$currentAttraction->geometry->location->lat.",".$currentAttraction->geometry->location->lng."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+                $googleApiResponse=file_get_contents($url);
+                $googleApiResponse=json_decode($googleApiResponse);
+                $duration=explode(' ',$googleApiResponse->routes[0]->legs[0]->duration->text)[0];
+                $totalTime+=$duration;
+                $counter++;
+            }
+
+            return $totalTime;
         }
     }
     //This function is used to 
