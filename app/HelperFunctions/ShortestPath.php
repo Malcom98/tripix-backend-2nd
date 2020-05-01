@@ -1,15 +1,16 @@
 <?php
+namespace App\HelperFunctions;
 use Illuminate\Http\Request;
 
-    if(!function_exists('getShortestPath')){
-        function getShortestPath(Request $request){
+class ShortestPath{
+    public static function getShortestPath(Request $request){
             //Putting data from request body into php variables
             $origin=$request->origin;
             $destination=$request->destination;
             $waypoints=$request->waypoints;
 
             //Getting content
-            $link=createLink($origin,$destination,$waypoints);
+            $link=self::createLink($origin,$destination,$waypoints);
             $googleDirectionsResponse = json_decode(file_get_contents($link));
             //Data needed for response
             $locations=array();
@@ -24,7 +25,7 @@ use Illuminate\Http\Request;
             }
 
             //Adding origin to locations
-            $originObject=createOriginObject($origin);
+            $originObject=self::createOriginObject($origin);
             array_push($locations,$originObject);
 
             //Adding landmarks to location
@@ -63,7 +64,7 @@ use Illuminate\Http\Request;
             }
 
             //Adding destination to locations array
-            $destinationObject=createDestinationObject($destination,$destination_duration,$destination_distance);
+            $destinationObject=self::createDestinationObject($destination,$destination_duration,$destination_distance);
             array_push($locations,$destinationObject);
 
             //Forming response object
@@ -77,11 +78,9 @@ use Illuminate\Http\Request;
             //Returning JSON object
             return json_encode($response_object);
         }
-    }
 
-    if(!function_exists('create_link')){
         //This function is used to generate link for google directions api
-        function createLink($origin,$destination,$waypoints){//Making google api directions request
+    private static function createLink($origin,$destination,$waypoints){//Making google api directions request
         $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
         foreach($waypoints as $waypoint){
             $link.="|".$waypoint["lat"].",".$waypoint["long"];
@@ -90,11 +89,9 @@ use Illuminate\Http\Request;
         
         return $link;
         }
-    }
 
     //This function creates origin object
-    if(!function_exists('createOriginObject')){
-        function createOriginObject($origin){
+    private static function createOriginObject($origin){
             $originObject=[
                 //"place_id"=>$place_id,
                 //"description"=>$description,
@@ -106,11 +103,9 @@ use Illuminate\Http\Request;
 
             return $originObject;
         }
-    }
 
     //This function creates destination object
-    if(!function_exists('createDestinationObject')){
-        function createDestinationObject($destination,$duration,$distance){
+    private static function createDestinationObject($destination,$duration,$distance){
             $destinationObject=[
                 //"description"=>$description,
                 "latitude"=>$destination["lat"],
@@ -121,6 +116,6 @@ use Illuminate\Http\Request;
 
             return $destinationObject;
         }
-    }
+}
 
 ?>

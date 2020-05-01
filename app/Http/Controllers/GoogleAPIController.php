@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\UserModel;
 use \Firebase\JWT\JWT;
 use App\Controllers\RouteController;
+use ShortestPath;
 
 class GoogleAPIController extends Controller
 {
@@ -26,14 +27,8 @@ class GoogleAPIController extends Controller
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }
-        return getShortestPath($request);
+        return ShortestPath::getShortestPath($request);
     }
-
-    
-
-    
-
-    //This function creates destination object
 
 
 
