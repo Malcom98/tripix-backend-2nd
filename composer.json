@@ -20,7 +20,7 @@
     },
     "autoload": {
         "files":[
-            "app/helpers.php"
+            "app/HelperFunctions/ShortestPath.php"
         ],
         "classmap": [
             "database/seeds",
