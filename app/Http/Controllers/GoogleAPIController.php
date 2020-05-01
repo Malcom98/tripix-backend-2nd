@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\UserModel;
 use \Firebase\JWT\JWT;
+use App\Controllers\RouteController;
 
 class GoogleAPIController extends Controller
 {
@@ -45,8 +46,6 @@ class GoogleAPIController extends Controller
         foreach($googleDirectionsResponse->routes[0]->waypoint_order as $waypoint){
             array_push($coordinates,$waypoint);
         }
-        
-        //return $coordinates;
 
         //Adding origin to locations
         $originObject=self::createOriginObject($origin);

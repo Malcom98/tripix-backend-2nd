@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\UserModel;
 use Validator;
 use \Firebase\JWT\JWT;
+use App\GoogleAPIController;
 
 class RouteController extends Controller
 {
@@ -62,58 +63,55 @@ class RouteController extends Controller
     //User must send param place in his request and the algorithm will find
     //longitude and latitude of given place.
     //After that, algorithm will search for all attractions with rating 3+ in range of 10 kilometers.
-    //Mini route will last 1 hour.
-    //Middle route will last 3 hours.
-    //Large route will last 5 hours.
+    //Mini route will have 5 attractions
+    //Middle route will have 10 attractions
+    //Large route will have 15 attractions
     public function getSuggestedRoutes(Request $request,$place){
         //JWT validation
-        if(!self::JWTValidation($request)){
+        if(!self::JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized."],401);
-        }else{
-            //Get coordinates of a given city
-            $url="https://maps.googleapis.com/maps/api/geocode/json?address=".rawurlencode($place)."&key=".env("GOOGLE_API_KEY", "somedefaultvalue"); 
-            $googleApiResponse=file_get_contents($url);
-            $googleApiResponse=json_decode($googleApiResponse);
-            $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
-            $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
 
-            //Needed arrays
-            $route=array();
-            $placeIdsInRoute=array();
-            //Get nearby attractions
-            for($i=0;$i<5;$i++){
-                $url="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=5000&type=tourist_attraction&key=".env("GOOGLE_API_KEY","somedefaultvalue");
-                $googleApiResponse=file_get_contents($url);
-                $googleApiResponse=json_decode($googleApiResponse);
-                $numberOfAttractions=count($googleApiResponse->results);
+        //Get coordinates of a given city
+        $url="https://maps.googleapis.com/maps/api/geocode/json?address=".rawurlencode($place)."&key=".env("GOOGLE_API_KEY", "somedefaultvalue"); 
+        $googleApiResponse=file_get_contents($url);
+        $googleApiResponse=json_decode($googleApiResponse);
+        $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
+        $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
 
-                $locationFound=false; // This is protection against places without cities
-                while(!$locationFound){ 
-                    $randomNumber=rand(0,$numberOfAttractions-1);
-                    $currentAttraction=$googleApiResponse->results[$randomNumber];
+        //Get nearby attractions
+        $tourist_attraction_json=self::GetNearby($latitude,$longitude,"tourist_attraction");
+        $amusement_park_json=self::getNearby($latitude,$longitude,"amusement_park");
+        $museum_json=self::getNearby($latitude,$longitude,"museum");
+        $library_json=self::getNearby($latitude,$longitude,"library");
+        $park_json=self::getNearby($latitude,$longitude,"park");
+        $stadium_json=self::getNearby($latitude,$longitude,"stadium");
+        $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,
+                $museum_json,$library_json,$park_json,$stadium_json);
+        $mergedArray=self::RemoveDuplicates($mergedArray);
 
-                    //If place has photo reference, has rating more than 3 
-                    //and is not already in array
-                    if(isset($currentAttraction->photos[0]->photo_reference) && $currentAttraction->rating>3 && !in_array($currentAttraction->place_id,$placeIdsInRoute)){
-                        $locationFound=true;
-                        $object=[
-                            "place_id"=>$currentAttraction->place_id,
-                            "latitude"=>$currentAttraction->geometry->location->lat,
-                            "longitude"=>$currentAttraction->geometry->location->lng,
-                            "photo_reference"=>$currentAttraction->photos[0]->photo_reference,
-                            "rating"=>$currentAttraction->rating,
-                            "name"=>$currentAttraction->name
-                        ];
-                        array_push($route,$object);
-                        array_push($placeIdsInRoute,$currentAttraction->place_id);
-                    }
-                }
-            }
-            return $route;
+        //Get number of attractions for route
+        $totalNumber=count($mergedArray);
+        if($totalNumber<6)
+            return response()->json("We're sorry, but this place does not have enough attractions to generate a route.");
+        $largeRouteCount=$totalNumber/2; $largeRoute=array();
+        $middleRouteCount=$largeRouteCount/2; $middleRoute=array();
+        $miniRouteCount=$middleRouteCount/2; $miniRoute=array();
+        $usedIndices=array();
+        
+        $id=rand(0,$totalNumber);
+        for($i=0;$i<$largeRouteCount;$i++){
+            while(in_array($id,$usedIndices))
+                $id=rand(0,$totalNumber-1);
+            array_push($usedIndices,$id);
+            
+            if($i<$miniRouteCount) array_push($miniRoute,$mergedArray[$id]);
+            if($i<$middleRouteCount) array_push($middleRoute,$mergedArray[$id]);
+            if($i<$largeRouteCount) array_push($largeRoute,$mergedArray[$id]);
         }
+
+        return response()->json(["miniRoute"=>$miniRoute,"middleRoute"=>$middleRoute,"largeRoute"=>$largeRoute],200);
     }
     //This function is used to 
-
     //Get my planned route
     public function getPlannedRoutes(Request $request,$id){
         return self::getSpecificGroupRoutes($request,'1',$id);
@@ -247,6 +245,35 @@ class RouteController extends Controller
     }
 
     /* ------------------ Other functions ------------------------- */
+    private function GetNearby($latitude,$longitude,$type){
+            $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=5000&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+            $response=json_decode(file_get_contents($link));
+            $response=$response->results;
+
+            $responseArray=array();
+            foreach($response as $r){
+                    if(isset($r->photos[0]->photo_reference) && isset($r->rating)){
+                    $place_id=$r->place_id;
+                    $latitude=$r->geometry->location->lat;
+                    $longitude=$r->geometry->location->lng;
+                    $photo_reference=$r->photos[0]->photo_reference;
+                    $rating=$r->rating;
+                    $name=$r->name;
+
+                    $ro=[
+                        "place_id"=>$place_id,
+                        "latitude"=>$latitude,
+                        "longitude"=>$longitude,
+                        "photo_reference"=>$photo_reference,
+                        "rating"=>$rating,
+                        "name"=>$name
+                    ];
+                    array_push($responseArray,$ro);
+                }
+            }
+            return $responseArray;
+    }
+
     private function ChangeRouteStatus($request,$status_id,$message){
         if(!self::JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized"],401);
@@ -334,4 +361,19 @@ class RouteController extends Controller
         $exists=UserModel::where('email',$email)->where('password',$password)->exists();
         return $exists;
     }
+
+    private function RemoveDuplicates($passedArray){
+        $placeIdsArray=array(); 
+        $arrayWithoutDuplicates=array();
+        $array=json_decode(json_encode($passedArray));
+
+        for($i=0;$i<count($array);$i++){
+            if(!in_array($array[$i]->place_id,$placeIdsArray)){
+                array_push($placeIdsArray,$array[$i]->place_id);
+                array_push($arrayWithoutDuplicates,$array[$i]);
+            }
+        }
+        return $arrayWithoutDuplicates;
+    }
+
 }
