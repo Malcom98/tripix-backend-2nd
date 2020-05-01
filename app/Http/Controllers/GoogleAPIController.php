@@ -27,7 +27,7 @@ class GoogleAPIController extends Controller
         if(!self::JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }
-        return ShortestPath::getShortestPath($request);
+        return ShortestPath::getShortestPath($request->origin,$request->destination,$request->waypoints);
     }
 
 

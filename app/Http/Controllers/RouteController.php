@@ -10,6 +10,7 @@ use App\UserModel;
 use Validator;
 use \Firebase\JWT\JWT;
 use App\GoogleAPIController;
+use ShortestPath;
 
 class RouteController extends Controller
 {
@@ -93,7 +94,11 @@ class RouteController extends Controller
         $totalNumber=count($mergedArray);
         if($totalNumber<6)
             return response()->json("We're sorry, but this place does not have enough attractions to generate a route.");
-        $largeRouteCount=$totalNumber/2; $largeRoute=array();
+        //If number of attractions is greater than 25, then make it 25
+        //because Google Directions API allows maximum 25 waypoints
+        if($totalNumber>25)
+            $totalNumber=25;
+        $largeRouteCount=$totalNumber-5; $largeRoute=array();
         $middleRouteCount=$largeRouteCount/2; $middleRoute=array();
         $miniRouteCount=$middleRouteCount/2; $miniRoute=array();
         $usedIndices=array();
@@ -108,6 +113,39 @@ class RouteController extends Controller
             if($i<$middleRouteCount) array_push($middleRoute,$mergedArray[$id]);
             if($i<$largeRouteCount) array_push($largeRoute,$mergedArray[$id]);
         }
+
+        
+        //Mini route
+        $miniRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($miniRoute)));
+        $miniRouteTime=json_decode(ShortestPath::getShortestPath($miniRouteRequestObject->origin,
+            $miniRouteRequestObject->destination,$miniRouteRequestObject->waypoints,false))->duration;
+        
+        $miniRoute=[
+            "attractions"=>$miniRoute,
+            "number_of_landmarks"=>count($miniRoute),
+            "duration"=>$miniRouteTime
+        ];
+
+        //Middle route
+        $middleRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($middleRoute)));
+        $middleRouteTime=json_decode(ShortestPath::getShortestPath($middleRouteRequestObject->origin,
+            $middleRouteRequestObject->destination,$middleRouteRequestObject->waypoints,false))->duration;
+        $middleRoute=[
+            "attractions"=>$middleRoute,
+            "number_of_landmarks"=>count($middleRoute),
+            "duration"=>$middleRouteTime
+        ];
+
+        //Large Route
+        $largeRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($largeRoute)));
+        $largeRouteTime=json_decode(ShortestPath::getShortestPath($largeRouteRequestObject->origin,
+            $largeRouteRequestObject->destination,$largeRouteRequestObject->waypoints,false))->duration;
+
+        $largeRoute=[
+            "attractions"=>$largeRoute,
+            "number_of_landmarks"=>count($largeRoute),
+            "duration"=>$largeRouteTime
+        ];
 
         return response()->json(["miniRoute"=>$miniRoute,"middleRoute"=>$middleRoute,"largeRoute"=>$largeRoute],200);
     }

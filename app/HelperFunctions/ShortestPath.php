@@ -7,18 +7,13 @@ class ShortestPath{
     //  @origin - Starting point of a route. Has longitude and latitude.
     //  @destination - Ending point of a route. Has longitude and latitude.
     //  @waypoints - Waypoints to be visited during the route. Array of objects which contain latitude and longitude.
-    public static function getShortestPath($origin,$destination,$waypoints){
-            //Putting data from request body into php variables
-        /*$origin=$request->origin;
-        $destination=$request->destination;
-        $waypoints=$request->waypoints;*/
-
+    public static function getShortestPath($origin,$destination,$waypoints,$userRequest=true){
         //Getting content
-        $link=self::createLink($origin,$destination,$waypoints);
+        $link=self::createLink($origin,$destination,$waypoints,$userRequest);
         $googleDirectionsResponse = json_decode(file_get_contents($link));
         //Data needed for response
         $locations=array();
-        $polyline= $googleDirectionsResponse->routes[0]->overview_polyline->points; // Sada mi se ovo nalazi u stringu
+        $polyline=$googleDirectionsResponse->routes[0]->overview_polyline->points; // Sada mi se ovo nalazi u stringu
         $total_distance=0;
         $total_duration=0;
 
@@ -29,7 +24,7 @@ class ShortestPath{
         }
 
         //Adding origin to locations
-        $originObject=self::createOriginObject($origin);
+        $originObject=self::createOriginObject($origin,$userRequest);
         array_push($locations,$originObject);
 
         //Adding landmarks to location
@@ -46,14 +41,17 @@ class ShortestPath{
                 break;
             }
 
-            $place_latitude=$waypoints[$coordinates[$counter-1]]["lat"];
-            $place_longitude=$waypoints[$coordinates[$counter-1]]["long"];
+            if($userRequest===true){
+                $place_latitude=$waypoints[$coordinates[$counter-1]]["lat"];
+                $place_longitude=$waypoints[$coordinates[$counter-1]]["long"];
+            }else{
+                $place_latitude=$waypoints[$coordinates[$counter-1]]->lat;
+                $place_longitude=$waypoints[$coordinates[$counter-1]]->long;
+            }
             $place_duration=explode(' ',$path->duration->text)[0];
             $place_distance=explode(' ',$path->distance->text)[0];
 
             $waypoint=[
-                //"place_id"=>$place_ids[$counter-1],
-                //"description"=>$place_descriptions[$counter],
                 "latitude"=>$place_latitude,
                 "longitude"=>$place_longitude,
                 "duration"=>$place_duration,
@@ -68,7 +66,7 @@ class ShortestPath{
         }
 
         //Adding destination to locations array
-        $destinationObject=self::createDestinationObject($destination,$destination_duration,$destination_distance);
+        $destinationObject=self::createDestinationObject($destination,$destination_duration,$destination_distance,$userRequest);
         array_push($locations,$destinationObject);
 
         //Forming response object
@@ -84,39 +82,66 @@ class ShortestPath{
     }
     
     //This function is used to generate link for google directions api
-    private static function createLink($origin,$destination,$waypoints){//Making google api directions request
-        $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
-        foreach($waypoints as $waypoint){
-            $link.="|".$waypoint["lat"].",".$waypoint["long"];
+    private static function createLink($origin,$destination,$waypoints,$userRequest){//Making google api directions request
+        if($userRequest===true){
+            $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
+            foreach($waypoints as $waypoint){
+                $link.="|".$waypoint["lat"].",".$waypoint["long"];
+            }
+            $link.="&destination=".$destination["lat"].",".$destination["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+            
+            return $link;
+        }else{
+            $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin->lat.",".$origin->long."&waypoints=optimize:true|";
+            foreach($waypoints as $waypoint){
+                $link.="|".$waypoint->lat.",".$waypoint->long;
+            }
+            $link.="&destination=".$destination->lat.",".$destination->long."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+            
+            return $link;
         }
-        $link.="&destination=".$destination["lat"].",".$destination["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
-        
-        return $link;
     }
 
     //This function creates origin object
-    private static function createOriginObject($origin){
-        $originObject=[
-            //"place_id"=>$place_id,
-            //"description"=>$description,
-            "latitude"=>$origin["lat"],
-            "longitude"=>$origin["long"],
-            "duration"=>"0",
-            "distance"=>"0"
-        ];
+    private static function createOriginObject($origin,$userRequest){
+        if($userRequest){
+            $originObject=[
+                "latitude"=>$origin["lat"],
+                "longitude"=>$origin["long"],
+                "duration"=>"0",
+                "distance"=>"0"
+            ];
+        }else{
+            $originObject=[
+                "latitude"=>$origin->lat,
+                "longitude"=>$origin->long,
+                "duration"=>"0",
+                "distance"=>"0"
+            ];
+        }
 
         return $originObject;
     }
 
     //This function creates destination object
-    private static function createDestinationObject($destination,$duration,$distance){
-        $destinationObject=[
-            //"description"=>$description,
-            "latitude"=>$destination["lat"],
-            "longitude"=>$destination["long"],
-            "duration"=>$duration,
-            "distance"=>$distance
-        ];
+    private static function createDestinationObject($destination,$duration,$distance,$userRequest){
+        if($userRequest===true){
+            $destinationObject=[
+                //"description"=>$description,
+                "latitude"=>$destination["lat"],
+                "longitude"=>$destination["long"],
+                "duration"=>$duration,
+                "distance"=>$distance
+            ];
+        }else{
+            $destinationObject=[
+                //"description"=>$description,
+                "latitude"=>$destination->lat,
+                "longitude"=>$destination->long,
+                "duration"=>$duration,
+                "distance"=>$distance
+            ];
+        }
 
         return $destinationObject;
     }
@@ -126,6 +151,11 @@ class ShortestPath{
     public static function createObjectForShortestPath($route){
         //Get number of attractions
         $numberOfAttractions=count($route);
+        //If number of attractions is greater than 25, then make it 25
+        //because Google Directions API allows maximum 25 waypoints
+        if($numberOfAttractions>25)
+            $numberOfAttractions=25;
+
         //Form origin object
         $origin=["lat"=>$route[0]->latitude,"long"=>$route[0]->longitude];
         //Form waypoints object
