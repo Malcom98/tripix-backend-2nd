@@ -27,6 +27,8 @@ class GoogleAPIController extends Controller
             return response()->json(["Error"=>"Unauthorized"],401);
         }
 
+        return test();
+
         //Putting data from request body into php variables
         $origin=$request->origin;
         $destination=$request->destination;
