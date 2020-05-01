@@ -151,11 +151,6 @@ class ShortestPath{
     public static function createObjectForShortestPath($route){
         //Get number of attractions
         $numberOfAttractions=count($route);
-        //If number of attractions is greater than 25, then make it 25
-        //because Google Directions API allows maximum 25 waypoints
-        if($numberOfAttractions>25)
-            $numberOfAttractions=25;
-
         //Form origin object
         $origin=["lat"=>$route[0]->latitude,"long"=>$route[0]->longitude];
         //Form waypoints object

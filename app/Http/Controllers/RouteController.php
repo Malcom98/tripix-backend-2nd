@@ -120,9 +120,8 @@ class RouteController extends Controller
         $miniRouteTime=json_decode(ShortestPath::getShortestPath($miniRouteRequestObject->origin,
             $miniRouteRequestObject->destination,$miniRouteRequestObject->waypoints,false))->duration;
         
-        $miniRoute=[
-            "attractions"=>$miniRoute,
-            "number_of_landmarks"=>count($miniRoute),
+        $miniRouteInfo=[
+            "landmarksNumber"=>count($miniRoute),
             "duration"=>$miniRouteTime
         ];
 
@@ -130,9 +129,8 @@ class RouteController extends Controller
         $middleRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($middleRoute)));
         $middleRouteTime=json_decode(ShortestPath::getShortestPath($middleRouteRequestObject->origin,
             $middleRouteRequestObject->destination,$middleRouteRequestObject->waypoints,false))->duration;
-        $middleRoute=[
-            "attractions"=>$middleRoute,
-            "number_of_landmarks"=>count($middleRoute),
+        $middleRouteInfo=[
+            "landmarksNumber"=>count($middleRoute),
             "duration"=>$middleRouteTime
         ];
 
@@ -140,14 +138,16 @@ class RouteController extends Controller
         $largeRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($largeRoute)));
         $largeRouteTime=json_decode(ShortestPath::getShortestPath($largeRouteRequestObject->origin,
             $largeRouteRequestObject->destination,$largeRouteRequestObject->waypoints,false))->duration;
-
-        $largeRoute=[
-            "attractions"=>$largeRoute,
-            "number_of_landmarks"=>count($largeRoute),
+        $largeRouteInfo=[
+            "landmarksNumber"=>count($largeRoute),
             "duration"=>$largeRouteTime
         ];
 
-        return response()->json(["miniRoute"=>$miniRoute,"middleRoute"=>$middleRoute,"largeRoute"=>$largeRoute],200);
+        return response()->json(["attractions"=>$largeRoute,
+                                "miniRoute"=>$miniRouteInfo,
+                                "middleRoute"=>$middleRouteInfo,
+                                "largeRoute"=>$largeRouteInfo],
+                                200);
     }
     //This function is used to 
     //Get my planned route
