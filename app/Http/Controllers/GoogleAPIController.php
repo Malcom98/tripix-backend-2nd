@@ -84,7 +84,7 @@ class GoogleAPIController extends Controller
         $bar_json=self::getNearby($request,"bar");
         $cafe_json=self::getNearby($request,"cafe");
         $mergedArray=array_merge($bar_json,$cafe_json);
-        $mergedArray=self::RemoveDuplicates($mergedArray);
+        $mergedArray=RemoveDuplicates($mergedArray);
         return response()->json($mergedArray,200);
     }
 
@@ -93,7 +93,7 @@ class GoogleAPIController extends Controller
         $store_json=self::getNearby($request,"store");
         $supermarket_json=self::getNearby($request,"supermarket");
         $mergedArray=  array_merge($shopping_mall_json,$store_json,$supermarket_json);
-        $mergedArray= self::RemoveDuplicates($mergedArray);
+        $mergedArray= RemoveDuplicates($mergedArray);
         return response()->json($mergedArray,200);
     }
 
@@ -113,7 +113,7 @@ class GoogleAPIController extends Controller
         $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,$art_gallery_json,
                 $synagogue_json,$city_hall_json,$courthouse_json,$embassy_json,
                 $library_json,$park_json,$stadium_json);
-        $mergedArray=self::RemoveDuplicates($mergedArray);
+        $mergedArray=RemoveDuplicates($mergedArray);
         return response()->json($mergedArray,200);
     }
 
@@ -205,7 +205,7 @@ class GoogleAPIController extends Controller
 
         $merged_json=array_merge($zoo_json,$pet_store_json,$aquarium_json);
         self::DescendingSortByRating($merged_json);
-        $merged_json=self::RemoveDuplicates($merged_json);
+        $merged_json=RemoveDuplicates($merged_json);
         return response()->json($merged_json,200);
     }
     
@@ -216,7 +216,7 @@ class GoogleAPIController extends Controller
 
         $merged_json=array_merge($school_json,$university_json,$library_json);
         self::DescendingSortByRating($merged_json);
-        $merged_json=self::RemoveDuplicates($merged_json);
+        $merged_json=RemoveDuplicates($merged_json);
         return response()->json($merged_json,200);
     }
 
@@ -226,7 +226,7 @@ class GoogleAPIController extends Controller
 
         $merged_json=array_merge($church_json,$synagogue_json);
         self::DescendingSortByRating($merged_json);
-        $merged_json=self::RemoveDuplicates($merged_json);
+        $merged_json=RemoveDuplicates($merged_json);
         return $merged_json;
     }
 
@@ -241,7 +241,7 @@ class GoogleAPIController extends Controller
         $merged_json=array_merge($tourist_attraction_json,$art_gallery_json,
                 $city_hall_json,$courthouse_json,$embassy_json,$museum_json);
         self::DescendingSortByRating($merged_json);
-        $merged_json=self::RemoveDuplicates($merged_json);
+        $merged_json=RemoveDuplicates($merged_json);
         return response()->json($merged_json,200);
     }
     //------------------------ Other functions ---------------------
@@ -362,27 +362,4 @@ class GoogleAPIController extends Controller
             return strcmp($a["rating"],$b["rating"])/(-1);
         });
     }
-
-    //array_unique() doesn't work because photo_references between same places are SOMETIMES different so it's not a good solution
-    //because of that, we will use our own user built function where we have 2 arrays: placeIdsArray (which is always unique for place)
-    //and arrayWithoutDuplicates which will hold unique places
-    //we go through $passedArray which contains duplicates and check whether a place exists in placeIdsArray. if it does
-    //then we do not add placeId to placeIds array, nor whole place object to arrayWithoutDuplicates
-    private function RemoveDuplicates($passedArray){
-        $placeIdsArray=array(); 
-        $arrayWithoutDuplicates=array();
-        $array=json_decode(json_encode($passedArray));
-
-        for($i=0;$i<count($array);$i++){
-            if(!in_array($array[$i]->place_id,$placeIdsArray)){
-                array_push($placeIdsArray,$array[$i]->place_id);
-                array_push($arrayWithoutDuplicates,$array[$i]);
-            }
-        }
-        return $arrayWithoutDuplicates;
-    }
-
-
-
-
 }

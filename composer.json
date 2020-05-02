@@ -20,7 +20,8 @@
     },
     "autoload": {
         "files":[
-            "app/HelperFunctions/JWTValidation.php"
+            "app/HelperFunctions/JWTValidation.php",
+            "app/HelperFunctions/RemoveDuplicates.php"
         ],
         "classmap": [
             "database/seeds",

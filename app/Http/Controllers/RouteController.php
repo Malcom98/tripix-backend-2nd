@@ -87,7 +87,7 @@ class RouteController extends Controller
         $stadium_json=self::getNearby($latitude,$longitude,"stadium");
         $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,
                 $museum_json,$library_json,$park_json,$stadium_json);
-        $mergedArray=self::RemoveDuplicates($mergedArray);
+        $mergedArray=RemoveDuplicates($mergedArray);
 
         //Get number of attractions for route
         $totalNumber=count($mergedArray);
@@ -377,19 +377,5 @@ class RouteController extends Controller
             $routeItem->save();
             $order_counter++;
         }
-    }
-
-    private function RemoveDuplicates($passedArray){
-        $placeIdsArray=array(); 
-        $arrayWithoutDuplicates=array();
-        $array=json_decode(json_encode($passedArray));
-
-        for($i=0;$i<count($array);$i++){
-            if(!in_array($array[$i]->place_id,$placeIdsArray)){
-                array_push($placeIdsArray,$array[$i]->place_id);
-                array_push($arrayWithoutDuplicates,$array[$i]);
-            }
-        }
-        return $arrayWithoutDuplicates;
     }
 }
