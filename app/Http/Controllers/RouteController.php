@@ -379,9 +379,6 @@ class RouteController extends Controller
         }
     }
 
-    //This function is used to validate JWT token
-    
-
     private function RemoveDuplicates($passedArray){
         $placeIdsArray=array(); 
         $arrayWithoutDuplicates=array();
@@ -395,5 +392,4 @@ class RouteController extends Controller
         }
         return $arrayWithoutDuplicates;
     }
-
 }

@@ -7,9 +7,9 @@ use Illuminate\Http\Request;
 class PhotoController extends Controller
 {
     public function getPhoto(Request $request){
-        /*if(!\App::call('App\Http\Controllers\GoogleApiController@JWTValidation')){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
-        }else*/{
+        }else{
             $photo_reference=$request['photo_reference'];
             $maxwidth=400;
             if(isset($request['maxwidth']))
