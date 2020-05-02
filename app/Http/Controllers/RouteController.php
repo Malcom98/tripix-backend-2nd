@@ -98,7 +98,7 @@ class RouteController extends Controller
         //because Google Directions API allows maximum 25 waypoints
         if($totalNumber>25)
             $totalNumber=25;
-        $largeRouteCount=$totalNumber-5; $largeRoute=array();
+        $largeRouteCount=$totalNumber-($totalNumber/5); $largeRoute=array();
         $middleRouteCount=$largeRouteCount/2; $middleRoute=array();
         $miniRouteCount=$middleRouteCount/2; $miniRoute=array();
         $usedIndices=array();

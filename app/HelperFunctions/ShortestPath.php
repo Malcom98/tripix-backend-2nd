@@ -82,6 +82,10 @@ class ShortestPath{
     }
     
     //This function is used to generate link for google directions api
+    //  @origin - Starting point of a route. Has longitude and latitude.
+    //  @destination - Ending point of a route. Has longitude and latitude.
+    //  @waypoints - Waypoints to be visited during the route. Array of objects which contain latitude and longitude.
+    //  @userRequest - true (request by user | false (request by app)
     private static function createLink($origin,$destination,$waypoints,$userRequest){//Making google api directions request
         if($userRequest===true){
             $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
@@ -103,6 +107,8 @@ class ShortestPath{
     }
 
     //This function creates origin object
+    //  @destination - Ending point of a route. Has longitude and latitude.
+    //  @userRequest - true (request by user | false (request by app)
     private static function createOriginObject($origin,$userRequest){
         if($userRequest){
             $originObject=[
@@ -124,6 +130,8 @@ class ShortestPath{
     }
 
     //This function creates destination object
+    //  @origin - Starting point of a route. Has longitude and latitude.
+    //  @userRequest - true (request by user | false (request by app)
     private static function createDestinationObject($destination,$duration,$distance,$userRequest){
         if($userRequest===true){
             $destinationObject=[
@@ -148,6 +156,7 @@ class ShortestPath{
 
     //This function creates an object that is requested in getShortestPath function
     //which is actually used for finding the shortest path.
+    //  @route - Contains array of route objects that are in specific route.
     public static function createObjectForShortestPath($route){
         //Get number of attractions
         $numberOfAttractions=count($route);
