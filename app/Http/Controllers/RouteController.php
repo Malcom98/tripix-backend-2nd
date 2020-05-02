@@ -8,7 +8,6 @@ use App\TransportType;
 use Illuminate\Http\Request;
 use App\UserModel;
 use Validator;
-use \Firebase\JWT\JWT;
 use App\GoogleAPIController;
 use ShortestPath;
 
@@ -18,7 +17,7 @@ class RouteController extends Controller
     //This function is called when user presses "Create" on "Route Overview" screen
     public function planRoute(Request $request){
         //JWT Validation
-        if(!self::JWTValidation($request)){
+        if(JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
         }
 
@@ -69,7 +68,7 @@ class RouteController extends Controller
     //Large route will have 15 attractions
     public function getSuggestedRoutes(Request $request,$place){
         //JWT validation
-        if(!self::JWTValidation($request))
+        if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized."],401);
 
         //Get coordinates of a given city
@@ -149,6 +148,7 @@ class RouteController extends Controller
                                 "largeRoute"=>$largeRouteInfo],
                                 200);
     }
+
     //This function is used to 
     //Get my planned route
     public function getPlannedRoutes(Request $request,$id){
@@ -168,7 +168,7 @@ class RouteController extends Controller
     //This function is used to get certain status_id routes
     public function getSpecificGroupRoutes($request,$status_id,$user_id){
         //JWT validation
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
         }else{
             //Check if user input is correct
@@ -213,7 +213,7 @@ class RouteController extends Controller
     //Get specific route by id -> MUST BE CHANGED
     public function getSpecificRoute(Request $request,$id){
         //JWT validation
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{
             //Get data from request
@@ -255,7 +255,7 @@ class RouteController extends Controller
 
     //This function returns place description.
     public function getPlaceDescription(Request $request,$id){
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }
 
@@ -313,7 +313,7 @@ class RouteController extends Controller
     }
 
     private function ChangeRouteStatus($request,$status_id,$message){
-        if(!self::JWTValidation($request))
+        if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized"],401);
 
         //Validation
@@ -382,23 +382,7 @@ class RouteController extends Controller
     }
 
     //This function is used to validate JWT token
-    private function JWTValidation(Request $request){
-        //Decode JWT
-        $jwt=$request->header('Authorization');
-        if(is_null($jwt))
-            return false; // If there is no JWT in header
-        $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
-        $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
-        $decoded = JWT::decode($jwt, $key, array('HS256'));
-
-        //Get info from from decoded JWT (currently in JSON format)
-        $email=$decoded->email;
-        $password=$decoded->password;
-
-        //Check if user exists
-        $exists=UserModel::where('email',$email)->where('password',$password)->exists();
-        return $exists;
-    }
+    
 
     private function RemoveDuplicates($passedArray){
         $placeIdsArray=array(); 

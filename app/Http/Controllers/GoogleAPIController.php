@@ -24,7 +24,7 @@ class GoogleAPIController extends Controller
     //Također ima duration -> ukupni duration
     public function newRoute(Request $request){
         //Token check
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }
         return ShortestPath::getShortestPath($request->origin,$request->destination,$request->waypoints);
@@ -35,7 +35,7 @@ class GoogleAPIController extends Controller
     //---------------------------- Get Nearby ---------------------------
     //Get nearby global function.
     public function getNearby(Request $request,$type){
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{
             $latitude=$request['lat'];
@@ -119,7 +119,7 @@ class GoogleAPIController extends Controller
 
     //Used GeoNames API
     public function getNearbyCities(Request $request){
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
         }
 
@@ -164,7 +164,7 @@ class GoogleAPIController extends Controller
     //---------------------------- Get Attractions ---------------------------
     //Get attractions global function.
     public function getAttraction(Request $request,$type){
-        if(!self::JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{
             $location=$request['location'];
