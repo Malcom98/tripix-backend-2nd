@@ -12,27 +12,6 @@ use App\Mail\ActivationMail;
 class UserController extends Controller
 {
     //-------------------------- API functions -----------------------
-    //GET   /users
-    public function index(Request $request){
-        //Check if JWT is valid.
-        if(self::CheckIfUserExists($request))
-            return response()->json(UserModel::get(),200);
-        else
-            return response()->json(["Message"=>"Unauthorized"],401);
-    }
-
-    //GET   /users/{id}  - CURRENTLY UNAVAILABLE BECAUSE THERE'S DISABLED API ROUTE
-    public function show($id){
-        $user=UserModel::find($id);
-
-        //Check if user exists
-        if(is_null($user)){
-            return response()->json(["message"=>"User not found."],404);
-        }
-
-        return response()->json($user,200);
-    }
-
     //POST  /users
     public function store(Request $request){
         //Validation
@@ -68,46 +47,6 @@ class UserController extends Controller
         return response()->json(["message"=>"User sucessfuly created.",
                                     "token"=>$jwt],201);
     }
-
-    //PUT   /users/{id}  - CURRENTLY UNAVAILABLE BECAUSE THERE'S DISABLED API ROUTE
-    public function update(Request $request, $id){
-        //Validation
-        $rules=[
-            'name'=>'required|min:3|max:32',
-            'email'=>'required|min:3|max:64|email|unique:users',
-            'password'=>'required|min:6'
-        ];
-
-        $validator=Validator::make($request->all(),$rules);
-        if($validator->fails()){
-            return response()->json($validator->errors(),400);
-        }
-
-        //-----Updating user-------
-        $user=UserModel::find($id);
-
-        //Check if user exists
-        if(is_null($user)){
-            return response()->json(["message"=>"User not found."],404);
-        }
-            
-        $user->update($request->all());
-        return response()->json(["message"=>"User sucessfuly updated."],200);
-    }
-
-    //DELETE    /users/{id}  - CURRENTLY UNAVAILABLE BECAUSE THERE'S DISABLED API ROUTE
-    public function delete($id){
-        $user=UserModel::find($id);
-
-        //Check if user exists
-        if(is_null($user)){
-            return response()->json(["message"=>"User not found."],404);
-        }
-
-        $user->delete();
-        return response()->json(["message"=>"User sucessfuly deleted."],200);
-    }
-
 
     //VERIFY
     public function verify(Request $request){

@@ -63,9 +63,6 @@ class RouteController extends Controller
     //User must send param place in his request and the algorithm will find
     //longitude and latitude of given place.
     //After that, algorithm will search for all attractions with rating 3+ in range of 10 kilometers.
-    //Mini route will have 5 attractions
-    //Middle route will have 10 attractions
-    //Large route will have 15 attractions
     public function getSuggestedRoutes(Request $request,$place){
         //JWT validation
         if(!JWTValidation($request))
