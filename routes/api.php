@@ -19,7 +19,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 //Register
 Route::get('users','UserController@index');
-//Route::get('users/{id}','UserController@show');
 Route::post('users','UserController@store');
 Route::post('users/verify','UserController@verify');
 Route::post('users/forgottenPassword','UserController@forgottenPassword');
@@ -27,15 +26,11 @@ Route::post('users/resetCode','UserController@resetCode');
 Route::post('users/newPassword','UserController@newPassword');
 Route::post('users/loggedNewEmail','UserController@newEmail');
 Route::post('users/loggedNewPassword','UserController@loggednewPassword');
-//Route::put('users/{id}','UserController@update');
-//Route::delete('users/{id}','UserController@delete');
 
 //Login
 Route::post('login','LoginController@store');
 
-//GetPhoto
 
-//GoogleAPI
 //GetPhoto
 Route::get('getphoto','PhotoController@getPhoto');
 

@@ -21,7 +21,7 @@ class PhotoController extends Controller
             $url="https://maps.googleapis.com/maps/api/place/photo?maxwidth=".$maxwidth;
             if(isset($request['maxheight']))
                 $url.="&maxheight=".$request['maxheight'];
-            $url.="&photoreference=".$photo_reference."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE";
+            $url.="&photoreference=".$photo_reference."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
 
             $image=file_get_contents($url);
             header("Content-Type: image/jpeg");
