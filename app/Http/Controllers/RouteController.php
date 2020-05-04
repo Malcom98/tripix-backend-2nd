@@ -182,11 +182,8 @@ class RouteController extends Controller
 
             //Authenticate user request
             $email=$user[0]->email;
-            $jwt=$request->header('Authorization');
-            $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
-            $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
-            $decoded = JWT::decode($jwt, $key, array('HS256'));
-            if($email!=$decoded->email)
+            $decodedObject = JWTDecode($request);
+            if($email!=$decodedObject->email)
                 return response()->json(["Error"=>"Forbidden."],403);
             
             //GetPlannedRoutes

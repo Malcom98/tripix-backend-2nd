@@ -248,16 +248,11 @@ class GoogleAPIController extends Controller
     //This function is used to validate JWT token
     public function JWTValidation(Request $request){
         //Decode JWT
-        $jwt=$request->header('Authorization');
-        if(is_null($jwt))
-            return false; // If there is no JWT in header
-        $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
-        $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
-        $decoded = JWT::decode($jwt, $key, array('HS256'));
+        $decodedObject =JWTDecode($request);
 
         //Get info from from decoded JWT (currently in JSON format)
-        $email=$decoded->email;
-        $password=$decoded->password;
+        $email=$decodedObject->email;
+        $password=$decodedObject->password;
 
         //Check if user exists
         $exists=UserModel::where('email',$email)->where('password',$password)->exists();

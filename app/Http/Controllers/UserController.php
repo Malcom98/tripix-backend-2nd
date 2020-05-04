@@ -20,12 +20,8 @@ class UserController extends Controller
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{ 
             //Get user ID
-            $jwt=$request->header('Authorization');
-            $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
-            $key=env("JWT_SECRET_KEY","somedefaultvalue");
-            $decoded=JWT::decode($jwt,$key,array('HS256'));
-            $currentEmail=$decoded->email;
-            $user=UserModel::where('email',$currentEmail)->get();
+            $decodedObject=JWTDecode($request);
+            $user=UserModel::where('email',$decodedObject->email)->get();
             $user_id=$user[0]["id"];
 
             //Get number of finished routes
@@ -206,17 +202,12 @@ class UserController extends Controller
 
             //Get new email from request
             $newEmail=$request->email;
-            //Dehash JWT
-            $jwt=$request->header('Authorization');
-            $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
-            $key=env("JWT_SECRET_KEY","somedefaultvalue");
-            $decoded=JWT::decode($jwt,$key,array('HS256'));
-            $currentEmail=$decoded->email;
-            $currentPassword=$decoded->password;
-            UserModel::where('email',$currentEmail)->where('password',$currentPassword)->update(['email'=>$newEmail]);
+            //Decode JWT
+            $decodedObject=JWTDecode($request);
+            UserModel::where('email',$decodedObject->email)->where('password',$decodedObject->password)->update(['email'=>$newEmail]);
 
             //Generate new token
-            $jwt = GenerateToken($newEmail,$currentPassword);
+            $jwt = self::GenerateToken($newEmail,$decodedObject->password);
             //Return response
             return response()->json(["message"=>"Email successfully changed.",
                                      "token"=>$jwt],200);
@@ -225,7 +216,7 @@ class UserController extends Controller
 
     //Function loggednewPassword(Request $request) is used to set a new password on "Profile" tab when user is logged in.
     //  @request - Request that was received from user.
-    public function loggednewPassword(Request $request){
+    public function loggedNewPassword(Request $request){
         if(!self::CheckIfUserExists($request)){
             return response()->json(["message"=>"User does not exist."],403);
         }else{
@@ -240,12 +231,9 @@ class UserController extends Controller
             }
 
             //Check if entered password is equal to current password
-            $jwt=$request->header('Authorization');
-            $key=env('JWT_SECRET_KEY','somedefaultvalue');
-            $jwt=explode(' ',$jwt)[1];
-            $decoded=JWT::decode($jwt,$key,array('HS256'));
-            $email=$decoded->email;
-            $password=$decoded->password; // currentPassword
+            $decodedObject=JWTDecode($request);
+            $email=$decodedObject->email;
+            $password=$decodedObject->password; // currentPassword
 
             //Check if entered password is invalid
             if(!Hash::check($request->password,$password))
@@ -287,16 +275,11 @@ class UserController extends Controller
     //  @request - Request that was received from user.
     public function CheckIfUserExists(Request $request){
         //Decode JWT
-        $jwt=$request->header('Authorization');
-        if(is_null($jwt))
-            return false; // If there is no JWT in header
-        $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
-        $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
-        $decoded = JWT::decode($jwt, $key, array('HS256'));
+        $decodedObject = JWTDecode($request);
 
         //Get info from from decoded JWT (currently in JSON format)
-        $email=$decoded->email;
-        $password=$decoded->password;
+        $email=$decodedObject->email;
+        $password=$decodedObject->password;
 
         //Check if user exists
         $exists=UserModel::where('email',$email)->where('password',$password)->exists();

@@ -25,7 +25,7 @@ Route::post('users/forgottenPassword','UserController@forgottenPassword');
 Route::post('users/resetCode','UserController@resetCode');
 Route::post('users/newPassword','UserController@newPassword');
 Route::post('users/loggedNewEmail','UserController@newEmail');
-Route::post('users/loggedNewPassword','UserController@loggednewPassword');
+Route::post('users/loggedNewPassword','UserController@loggedNewPassword');
 
 //Login
 Route::post('login','LoginController@store');
