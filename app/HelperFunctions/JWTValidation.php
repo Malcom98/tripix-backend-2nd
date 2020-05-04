@@ -4,6 +4,9 @@ use \Firebase\JWT\JWT;
 use App\UserModel;
 use Illuminate\Http\Request;
 
+//Function JWTValidation(Request $request) is used to generate JWT token
+//based on request which has email and hashed (bcrypted) password. 
+//  @request - Request that was received from user.
 function JWTValidation(Request $request){
     //Decode JWT
     $jwt=$request->header('Authorization');
