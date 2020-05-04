@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\UserModel;
+use App\Route;
+use App\RouteItem;
 use Validator;
 use Hash;
 use \Firebase\JWT\JWT;
@@ -11,6 +13,45 @@ use App\Mail\ActivationMail;
 
 class UserController extends Controller
 {
+    //This function is used to return stats about user
+    //  @request - Request that was received from user.
+    public function userStats(Request $request){
+        if(!JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized"],401);
+        }else{ 
+            //Get user ID
+            $jwt=$request->header('Authorization');
+            $jwt=explode(' ',$jwt)[1]; // Remove bearer from header
+            $key=env("JWT_SECRET_KEY","somedefaultvalue");
+            $decoded=JWT::decode($jwt,$key,array('HS256'));
+            $currentEmail=$decoded->email;
+            $user=UserModel::where('email',$currentEmail)->get();
+            $user_id=$user[0]["id"];
+
+            //Get number of finished routes
+            $finishedRoutes=Route::where('user_id',$user_id)->where('status_id',3)->get();
+            $finishedRoutesCount=count($finishedRoutes);
+            //Get number of planned routes
+            $plannedRoutes=Route::where('user_id',$user_id)->where('status_id',1)->get();
+            $plannedRoutesCount=count($plannedRoutes);
+            //Get sum of total distance travelled
+            $distanceTravelled=Route::where('user_id',$user_id)->where('status_id',3)->sum('total_distance');
+            //Get total number of visited places
+            $placesVisitedCount=0;
+            foreach($finishedRoutes as $finishedRoute)
+                $placesVisitedCount+=count(RouteItem::where('route_id',$finishedRoute["id"])->where('completed',1)->get());
+            
+            $returnObject=[
+                "finishedRoutesCount"=>$finishedRoutesCount,
+                "plannedRoutesCount"=>$plannedRoutesCount,
+                "totalDistanceTravelled"=>$distanceTravelled,
+                "placesVisited"=>$placesVisitedCount
+            ];
+
+            return response()->json($returnObject,200);
+
+        }
+    }
     //This function is used to store new user in database.
     //  @request - Request that was received from user.
     public function store(Request $request){

@@ -18,7 +18,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 //Register
-Route::get('users','UserController@index');
+Route::get('user/stats','UserController@userStats');
 Route::post('users','UserController@store');
 Route::post('users/verify','UserController@verify');
 Route::post('users/forgottenPassword','UserController@forgottenPassword');
