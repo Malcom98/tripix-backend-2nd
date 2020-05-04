@@ -11,10 +11,10 @@ use App\Mail\ActivationMail;
 
 class UserController extends Controller
 {
-    //-------------------------- API functions -----------------------
-    //POST  /users
+    //This function is used to store new user in database.
+    //  @request - Request that was received from user.
     public function store(Request $request){
-        //Validation
+        //Validation - Request
         $rules=[
             'name'=>'required|min:3|max:32',
             'email'=>'required|min:3|max:64|email|unique:users',
@@ -22,12 +22,10 @@ class UserController extends Controller
         ];
 
         $validator=Validator::make($request->all(),$rules);
-        if($validator->fails()){
+        if($validator->fails())
             return response()->json($validator->errors(),400);
-        }
 
-
-        //---------- Adding user ---------- 
+        //Adding user to database
         $user = new UserModel;
         $user->name=$request->name;
         $hashedPassword=bcrypt($request->password); // Using bcrypt to hash
@@ -37,36 +35,45 @@ class UserController extends Controller
         $user->verified=$verificationCode;
         $user->save();
 
-        $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
-        $payload = array(
-            "email"=>$request->email,
-            "password"=> $hashedPassword
-        );
-        $jwt = JWT::encode($payload, $key);
+        //Generate new token
+        $jwt = self::GenerateToken($request->email,$hashedPassword);
 
+        //Return response
         return response()->json(["message"=>"User sucessfuly created.",
                                     "token"=>$jwt],201);
     }
 
-    //VERIFY
+    //This function is used to verify E-Mail address with activation code.
+    //  @request - Request that was received from user.
     public function verify(Request $request){
+        //Getting data from request into PHP variables
         $email=$request->email;
         $activation_code=$request->activation_code;
 
-        $user=UserModel::where('email',$email)->get();
-        if(strlen($user[0]->verified)==0){
-            return response()->json(["message"=>"Account has already been validated."],200);
-        }
+        //Validation - Request
+        $rules=[
+            'email'=>'required',
+            'activation_code'=>'required'
+        ];
 
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails())
+            return response()->json($validator->errors(),400);
+
+        //Check if account has already been verified            
+        $user=UserModel::where('email',$email)->get();
+        if(strlen($user[0]->verified)==0)
+            return response()->json(["message"=>"Account has already been validated."],200);
+        
+        //Check if activation code in database and in request are the same
         if($user[0]->verified==$activation_code){
             UserModel::where('email',$email)->update(['verified'=>null]);
             $user_id=$user[0]->id;
             $user_fullname=$user[0]->name;
             $token=self::GenerateToken($user[0]->email,$user[0]->password);
             return response()->json(["message"=>"Account sucessfully verified.","user_id"=>$user_id,"full_name"=>$user_fullname,"token"=>$token],200);
-        }else{
+        }else
             return response()->json(["message"=>"Invalid activation code."],403);
-        }
     }
 
     //FORGOTTEN PASSWORD
@@ -160,12 +167,7 @@ class UserController extends Controller
             UserModel::where('email',$currentEmail)->where('password',$currentPassword)->update(['email'=>$newEmail]);
 
             //Generate new token
-            $payload = array(
-                "email"=>$newEmail,
-                "password"=> $currentPassword
-            );
-            $jwt = JWT::encode($payload, $key);
-
+            $jwt = GenerateToken($newEmail,$currentPassword);
             //Return response
             return response()->json(["message"=>"Email successfully changed.",
                                      "token"=>$jwt],200);
@@ -204,11 +206,9 @@ class UserController extends Controller
             UserModel::where('email',$email)->where('password',$password)->update(["password"=>$newPassword]);
 
             //Generate new token
-            $payload = array(
-                "email"=>$email,
-                "password"=> $newPassword
-            );
-            $jwt = JWT::encode($payload, $key);
+            $jwt = self::GenerateToken($email,$newPassword);
+
+            //Return response
             return response()->json(["message"=>"Password successfuly changed.",
                                      "token"=>$jwt],200);
 
