@@ -13,7 +13,7 @@ use App\Mail\ActivationMail;
 
 class UserController extends Controller
 {
-    //This function is used to return stats about user
+    //Function userStats(Request $request) is used to return stats about user
     //  @request - Request that was received from user.
     public function userStats(Request $request){
         if(!JWTValidation($request)){
@@ -52,7 +52,7 @@ class UserController extends Controller
 
         }
     }
-    //This function is used to store new user in database.
+    //Function store(Request $request) is used to store new user in database.
     //  @request - Request that was received from user.
     public function store(Request $request){
         //Validation - Request
@@ -84,7 +84,7 @@ class UserController extends Controller
                                     "token"=>$jwt],201);
     }
 
-    //This function is used to verify E-Mail address with activation code.
+    //Function verify(Request $request) is used to verify E-Mail address with activation code.
     //  @request - Request that was received from user.
     public function verify(Request $request){
         //Getting data from request into PHP variables
@@ -117,7 +117,9 @@ class UserController extends Controller
             return response()->json(["message"=>"Invalid activation code."],403);
     }
 
-    //FORGOTTEN PASSWORD
+    //Function forgottenPassword(Request $request) is used when user enters his email and clicks forgotten password.
+    //An new pwd reset code is generated and send to entered email.
+    //  @request - Request that was received from user.
     public function forgottenPassword(Request $request){
         //Get email from request
         $email=$request->email;
@@ -144,6 +146,8 @@ class UserController extends Controller
 
     }
 
+    //Function resetCode(Request $request) is used to check whether reset code that user entered is valid.
+    //  @request - Request that was received from user.
     public function resetCode(Request $request){
         $email=$request->email;
         $resetCode=$request->reset_code;
@@ -155,6 +159,9 @@ class UserController extends Controller
         }
     }
 
+    //Function newPassword(Request $request) is used to set a new password that user entered after validating
+    //reset code.
+    //  @request - Request that was received from user.
     public function newPassword(Request $request){
         //Validator
         $rules=[
@@ -181,7 +188,8 @@ class UserController extends Controller
         }
     }
 
-    //Logged In - New Email
+    //Function newEmail(Request $request) is used to set a new email on "Profile" tab when user is logged in.
+    //  @request - Request that was received from user.
     public function newEmail(Request $request){
         if(!self::CheckIfUserExists($request)){
             return response()->json(["message"=>"User does not exist."],403);
@@ -215,7 +223,8 @@ class UserController extends Controller
         }
     }
 
-    //Logged In - New password
+    //Function loggednewPassword(Request $request) is used to set a new password on "Profile" tab when user is logged in.
+    //  @request - Request that was received from user.
     public function loggednewPassword(Request $request){
         if(!self::CheckIfUserExists($request)){
             return response()->json(["message"=>"User does not exist."],403);
@@ -259,6 +268,10 @@ class UserController extends Controller
 
 
     //------------------------ Other functions ---------------------
+    //Function GenerateToken($email,$password) is used to generate JWT token depending
+    //on email and password.
+    //  @email - User email.
+    //  @password - User password.
     public function GenerateToken($email,$password){
         $key=env('JWT_SECRET_KEY','somedefaultvalue');
         $payload = array(
@@ -269,6 +282,9 @@ class UserController extends Controller
         return $jwt;
     }
 
+    //Function CheckIfUserExists(Request $request) is used to check whether
+    //or not user with sent token exists in database.
+    //  @request - Request that was received from user.
     public function CheckIfUserExists(Request $request){
         //Decode JWT
         $jwt=$request->header('Authorization');
@@ -287,6 +303,8 @@ class UserController extends Controller
         return $exists;
     }
 
+    //Function SendActivationEmail($user) is used to send email with verification code.
+    //  @user - UserModel object.
     public function SendActivationEmail($user)
     {
         $verificationCode=self::GenerateVerificationCode();
@@ -301,6 +319,8 @@ class UserController extends Controller
         return $verificationCode;
     }
 
+    //Function GenerateVerificationCode() is used to generate a random
+    //6 digit code.
     public function GenerateVerificationCode(){
         $verificationCode="";
         $letters="12345678901234567890";
