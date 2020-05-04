@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 //Function JWTDecode(Request $request) is used to decode JWT token and return
 //object which contains email and password.
 //  @request - Request that was received from user.
-function DecodeJWT(Request $request){
+function JWTDecode(Request $request){
     $jwt=$request->header('Authorization');
     if(is_null($jwt))
         return false; // If there is no JWT in header
