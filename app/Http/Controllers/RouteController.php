@@ -8,16 +8,17 @@ use App\TransportType;
 use Illuminate\Http\Request;
 use App\UserModel;
 use Validator;
+use \Firebase\JWT\JWT;
 use App\GoogleAPIController;
 use ShortestPath;
 
 class RouteController extends Controller
 {
     //Planned route
-    //This function is called when user presses "Create" on "Route Overview" screen
+    //This function is called when user presses "Create" on "Route Overview" screen.
     public function planRoute(Request $request){
         //JWT Validation
-        if(JWTValidation($request)){
+        if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
         }
 
@@ -109,7 +110,6 @@ class RouteController extends Controller
             if($i<$middleRouteCount) array_push($middleRoute,$mergedArray[$id]);
             if($i<$largeRouteCount) array_push($largeRoute,$mergedArray[$id]);
         }
-
         
         //Mini route
         $miniRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($miniRoute)));
@@ -117,8 +117,10 @@ class RouteController extends Controller
             $miniRouteRequestObject->destination,$miniRouteRequestObject->waypoints,false))->duration;
         
         $miniRouteInfo=[
-            "landmarksNumber"=>count($miniRoute),
-            "duration"=>$miniRouteTime
+            "number_attractions"=>count($miniRoute),
+            "duration"=>$miniRouteTime,
+            "name"=>"Mini route",
+            "photo_ref"=>$largeRoute[$miniRouteCount-1]->photo_reference
         ];
 
         //Middle route
@@ -126,8 +128,10 @@ class RouteController extends Controller
         $middleRouteTime=json_decode(ShortestPath::getShortestPath($middleRouteRequestObject->origin,
             $middleRouteRequestObject->destination,$middleRouteRequestObject->waypoints,false))->duration;
         $middleRouteInfo=[
-            "landmarksNumber"=>count($middleRoute),
-            "duration"=>$middleRouteTime
+            "number_attractions"=>count($middleRoute),
+            "duration"=>$middleRouteTime,
+            "name"=>"Middle route",
+            "photo_ref"=>$largeRoute[$middleRouteCount-1]->photo_reference
         ];
 
         //Large Route
@@ -135,14 +139,16 @@ class RouteController extends Controller
         $largeRouteTime=json_decode(ShortestPath::getShortestPath($largeRouteRequestObject->origin,
             $largeRouteRequestObject->destination,$largeRouteRequestObject->waypoints,false))->duration;
         $largeRouteInfo=[
-            "landmarksNumber"=>count($largeRoute),
-            "duration"=>$largeRouteTime
+            "number_attractions"=>count($largeRoute),
+            "duration"=>$largeRouteTime,
+            "name"=>"Large route",
+            "photo_ref"=>$largeRoute[$largeRouteCount-1]->photo_reference
         ];
 
         return response()->json(["attractions"=>$largeRoute,
-                                "miniRoute"=>$miniRouteInfo,
-                                "middleRoute"=>$middleRouteInfo,
-                                "largeRoute"=>$largeRouteInfo],
+                                "routes"=>array($miniRouteInfo,
+                                $middleRouteInfo,
+                                $largeRouteInfo)],
                                 200);
     }
 
