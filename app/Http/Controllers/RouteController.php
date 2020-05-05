@@ -17,6 +17,15 @@ class RouteController extends Controller
     //-----------------------------------------------------------------------------------------------------------
     //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
     //-----------------------------------------------------------------------------------------------------------
+    //Function newRoute(Request $request) is used to generate shortest path based on user request.
+    //  @request - Request that was received from user.
+    public function newRoute(Request $request){
+        //JWT Validation
+        if(!JWTValidation($request))
+            return response()->json(["Error"=>"Unauthorized"],401);
+
+        return ShortestPath::getShortestPath($request->origin,$request->destination,$request->waypoints);
+    }
 
     //Function planRoute(Request $request) is used when user accepts the route
     //that was shown to him on "Route overview screen".

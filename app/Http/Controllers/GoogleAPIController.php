@@ -17,19 +17,6 @@ class GoogleAPIController extends Controller
     //-------------------------------------------------------------------
     //------------------------ Google API Functions ---------------------
     //-------------------------------------------------------------------
-    //---------------------------- Routes -------------------------------
-    // PREMJESTITI U ROUTES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //This function is used to generate shortest path based on user request.
-    //  @request - Request that was received from user.
-    public function newRoute(Request $request){
-        //JWT Validation
-        if(!JWTValidation($request))
-            return response()->json(["Error"=>"Unauthorized"],401);
-
-        return ShortestPath::getShortestPath($request->origin,$request->destination,$request->waypoints);
-    }
-
-
 
     //---------------------------- Get Nearby ---------------------------    
     //Function getNearby($latitude,$longitude,$type) is used to
