@@ -127,7 +127,7 @@ class UserController extends Controller
 
         //Check if user with given email exists
         if(count(UserModel::where('email',$email)->get())==0)
-            return response()->json(["message"=>"Invalid email."],403);
+            return response()->json(["message"=>"This email is not used by any user."],403);
 
         //Generate code
         $code=self::generateVerificationCode();
@@ -226,13 +226,13 @@ class UserController extends Controller
         }else{
             //Validation
             $rules=[
+                'current_password'=>'required|min:6',
                 'new_password'=>'required|min:6'
             ];
 
             $validator=Validator::make($request->all(),$rules);
-            if($validator->fails()){
+            if($validator->fails())
                 return response()->json($validator->errors(),400);
-            }
 
             //Check if entered password is equal to current password
             $decodedObject=JWTDecode($request);
@@ -240,7 +240,7 @@ class UserController extends Controller
             $password=$decodedObject->password; // currentPassword
 
             //Check if entered password is invalid
-            if(!Hash::check($request->password,$password))
+            if(!Hash::check($request->current_password,$password))
                 return response()->json(["message"=>"Invalid current password."],403);
             
             //Change password
