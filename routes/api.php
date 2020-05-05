@@ -19,13 +19,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 //Register
 Route::get('user/stats','UserController@userStats');
-Route::post('users','UserController@store');
-Route::post('users/verify','UserController@verify');
-Route::post('users/forgottenPassword','UserController@forgottenPassword');
-Route::post('users/resetCode','UserController@resetCode');
-Route::post('users/newPassword','UserController@newPassword');
-Route::post('users/loggedNewEmail','UserController@newEmail');
-Route::post('users/loggedNewPassword','UserController@loggedNewPassword');
+Route::post('users','UserController@userSave');
+Route::post('users/verify','UserController@userVerifyAdress');
+Route::post('users/forgottenPassword','UserController@userForgottenPassword');
+Route::post('users/resetCode','UserController@userResetCode');
+Route::post('users/newPassword','UserController@userNewPassword');
+Route::post('users/loggedNewEmail','UserController@loggedUserNewEmail');
+Route::post('users/loggedNewPassword','UserController@loggedUserNewPassword');
 
 //Login
 Route::post('login','LoginController@store');

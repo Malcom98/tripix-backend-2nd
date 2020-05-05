@@ -262,7 +262,6 @@ class GoogleAPIController extends Controller
     //This function is used for API endpoint /getphoto
     private function getPhotoReference($cityName){
         $url=("https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=".rawurlencode($cityName)."&inputtype=textquery&fields=photos&key=".env("GOOGLE_API_KEY","somedefaultvalue"));
-        //return !((array)json_decode(file_get_contents($url))->candidates[0])?"empty":"notempty";
         if((array)json_decode(file_get_contents($url))->candidates[0]){
             return json_decode(file_get_contents($url))->candidates[0]->photos[0]->photo_reference;
         }else{
@@ -273,8 +272,6 @@ class GoogleAPIController extends Controller
     //Ova formula služi za novo rangiranje attraction prema ratingu
     //Gleda samo one lokacije koje imaju $place->photos i više od 50 glasova.
     private function bayesovaFormula($response){
-        //return (object)$response->results;
-
         //Izracun ratingova
         //S = wR + (1-w)C
         //w = v/v+m
