@@ -20,6 +20,7 @@
     },
     "autoload": {
         "files":[
+            "app/HelperFunctions/JWTCreate.php",
             "app/HelperFunctions/JWTDecode.php",
             "app/HelperFunctions/JWTValidation.php",
             "app/HelperFunctions/RemoveDuplicates.php"

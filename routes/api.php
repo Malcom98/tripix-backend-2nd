@@ -29,7 +29,7 @@ Route::post('users/loggedNewEmail','UserController@changeLoggedUserEmailAdress')
 Route::post('users/loggedNewPassword','UserController@changeLoggedUserPassword');
 
 //Login
-Route::post('login','LoginController@store');
+Route::post('login','LoginController@checkLogin');
 
 
 //GetPhoto

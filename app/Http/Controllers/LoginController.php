@@ -10,19 +10,23 @@ use \Firebase\JWT\JWT; //composer require firebase/php-jwt:dev-master
 
 class LoginController extends Controller
 {
+    //Function store(Request $request) is used to check whether user entered
+    //correct or incorrent credentials.
+    //If valid credentials were entered, response with JWT token is sent.
+    //  @request - Request that was received from user.
     public function store(Request $request){
-
         //Validation
         $rules=[
             'email'=>'required|email',
             'password'=>'required'
         ];
+
         $validator=Validator::make($request->all(),$rules);
         if($validator->fails()){
             return response()->json($validator->errors(),400);
         }
 
-        //Check if exists
+        //Get data from request
         $email=$request->input('email');
         $password=$request->input('password');
 
@@ -36,21 +40,15 @@ class LoginController extends Controller
             $userModelName= $userModel[0]->name; // Get users name
 
             //Check if user verified it's account
-            if(strlen($userModelVerificationCode)){
+            if(strlen($userModelVerificationCode))
                 return response()->json(["message"=>"Account not verified yet."],403);
-            }
 
             //Compare inputed password and password in DB that is hashed with bcrypt 
             if(!Hash::check($password,$userModelPassword))
                 return response()->json(["message"=>"Invalid credentials."],403);
 
-            $key = env("JWT_SECRET_KEY", "somedefaultvalue"); 
-            $payload = array(
-                "email"=>$email,
-                "password"=> $userModelPassword,
-            );
-
-            $jwt = JWT::encode($payload, $key);
+            //Create JWT and return response
+            $jwt = JWTCreate($email,$userModelPassword);
             return response()->json(["message"=>"Successfuly logged in.","token"=>$jwt,"user_id"=>$userModel[0]->id,"full_name"=>$userModelName],200);
         }
     }
