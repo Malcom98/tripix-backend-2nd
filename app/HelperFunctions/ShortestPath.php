@@ -86,13 +86,13 @@ class ShortestPath{
     //  @destination - Ending point of a route. Has longitude and latitude.
     //  @waypoints - Waypoints to be visited during the route. Array of objects which contain latitude and longitude.
     //  @userRequest - true (request by user | false (request by app)
-    private static function createLink($origin,$destination,$waypoints,$userRequest){//Making google api directions request
+    private static function createLink($origin,$destination,$waypoints,$userRequest=true){//Making google api directions request
         if($userRequest===true){
             $link = "https://maps.googleapis.com/maps/api/directions/json?origin=".$origin["lat"].",".$origin["long"]."&waypoints=optimize:true|";
             foreach($waypoints as $waypoint){
                 $link.="|".$waypoint["lat"].",".$waypoint["long"];
             }
-            $link.="&destination=".$destination["lat"].",".$destination["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+            $link.="&destination=".$destination["lat"].",".$destination["long"]."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en";
             
             return $link;
         }else{
@@ -100,7 +100,7 @@ class ShortestPath{
             foreach($waypoints as $waypoint){
                 $link.="|".$waypoint->lat.",".$waypoint->long;
             }
-            $link.="&destination=".$destination->lat.",".$destination->long."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en&region=undefined";
+            $link.="&destination=".$destination->lat.",".$destination->long."&key=AIzaSyCFOkhSfIYP_i1w5q_Lk-3Rg81dAsCSwcE&mode=driving&language=en";
             
             return $link;
         }
