@@ -18,67 +18,69 @@ class GoogleAPIController extends Controller
     //------------------------ Google API Functions ---------------------
     //-------------------------------------------------------------------
     //---------------------------- Routes -------------------------------
-    //Ovo je glavna funkcija unutar naše aplikacije.
-    //Kao parametre u requestu dobivam origin, destination i waypoints latitude i longitude
-    //Kao response vraća se locations array koji ima objekt s atributima: place_id, latitude,
-    //                                              longitude, duration, distance
-    //                                          -> odnosi se na sljedeći landmark
-    //Također ima route -> overview_polyline_points iz responsea
-    //Također ima distance -> ukupni distance
-    //Također ima duration -> ukupni duration
+    // PREMJESTITI U ROUTES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //This function is used to generate shortest path based on user request.
+    //  @request - Request that was received from user.
     public function newRoute(Request $request){
-        //Token check
-        if(!JWTValidation($request)){
+        //JWT Validation
+        if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized"],401);
-        }
+
         return ShortestPath::getShortestPath($request->origin,$request->destination,$request->waypoints);
     }
 
 
 
-    //---------------------------- Get Nearby ---------------------------
-    //Get nearby global function.
+    //---------------------------- Get Nearby ---------------------------    
+    //Function getNearby($latitude,$longitude,$type) is used to
+    //get specific nearby locations based on latitude and longitude coordinations.
+    //  @latitude - Latitude of current location. 
+    //  @longitude - Longitude of current location. 
+    //  @Type - Google API place type. 
     public function getNearby(Request $request,$type){
-        if(!JWTValidation($request)){
+        if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized"],401);
-        }else{
-            $latitude=$request['lat'];
-            $longitude=$request['long'];
+        
+        //Get data from request
+        $latitude=$request['lat'];
+        $longitude=$request['long'];
 
-            if(is_null($longitude) || is_null($latitude))
-                return response()->json(["Error"=>"Bad Request."],400);
+        //Check if request is not valid
+        if(is_null($longitude) || is_null($latitude))
+            return response()->json(["Error"=>"Bad Request."],400);
 
-            $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=1500&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
-            $response=json_decode(file_get_contents($link));
-            $response=$response->results;
+        //Create link
+        $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=1500&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+        $response=json_decode(file_get_contents($link));
+        $response=$response->results;
 
-            $responseArray=array();
-            foreach($response as $r){
-                    if(isset($r->photos[0]->photo_reference) && isset($r->rating)){
-                    $place_id=$r->place_id;
-                    $latitude=$r->geometry->location->lat;
-                    $longitude=$r->geometry->location->lng;
-                    $photo_reference=$r->photos[0]->photo_reference;
-                    $rating=$r->rating;
-                    $name=$r->name;
+        //Create response array and fill it with data
+        $responseArray=array();
+        foreach($response as $r){
+                if(isset($r->photos[0]->photo_reference) && isset($r->rating)){
+                $place_id=$r->place_id;
+                $latitude=$r->geometry->location->lat;
+                $longitude=$r->geometry->location->lng;
+                $photo_reference=$r->photos[0]->photo_reference;
+                $rating=$r->rating;
+                $name=$r->name;
 
-                    $ro=[
-                        "place_id"=>$place_id,
-                        "latitude"=>$latitude,
-                        "longitude"=>$longitude,
-                        "photo_reference"=>$photo_reference,
-                        "rating"=>$rating,
-                        "name"=>$name
-                    ];
-                    array_push($responseArray,$ro);
-                }
+                $ro=[
+                    "place_id"=>$place_id,
+                    "latitude"=>$latitude,
+                    "longitude"=>$longitude,
+                    "photo_reference"=>$photo_reference,
+                    "rating"=>$rating,
+                    "name"=>$name
+                ];
+                array_push($responseArray,$ro);
             }
-
-            return $responseArray;
         }
+
+        //Return response
+        return $responseArray;
     }
 
-    //Specific get nearby functions
     public function getNearbyRestaurants(Request $request){
         $restaurants = self::getNearby($request,"restaurant");
         return response()->json($restaurants,200);
@@ -121,26 +123,29 @@ class GoogleAPIController extends Controller
         return response()->json($mergedArray,200);
     }
 
-    //Used GeoNames API
+    //Function getNearbyCities(Request $request) is using GeoNames API
+    //which gets nearby cities based on given location.
+    //  @request - Request that was received from user.
     public function getNearbyCities(Request $request){
-        if(!JWTValidation($request)){
+        if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized."],401);
-        }
 
         //Get latitude and longitude from JSON
         $latitude=$request['lat'];
         $longitude=$request['long'];
 
         //Check longitude and latitude
-        if($latitude == null || $longitude == null){
+        if($latitude == null || $longitude == null)
             return response()->json(["Error"=>"Bad Request"],400);
-        }
 
         $nearbyCities=self::getNearbyPlacesArray($latitude,$longitude);
 
+        //Return response
         return response()->json($nearbyCities,200);
     }
 
+    //Function getNearbyPlacesArray sends request to GeoCoding API
+    //and retrieves nearby places in range of 100km.
     private function getNearbyPlacesArray($latitude,$longitude){
         $responseStyle = 'short'; // the length of the response
         $citySize = 'cities5000'; // the minimal number of citizens a city must have
@@ -152,42 +157,45 @@ class GoogleAPIController extends Controller
         $url='http://api.geonames.org/findNearbyPlaceNameJSON?lat='.$latitude.'&lng='.$longitude.'&style='.$responseStyle.'&cities='.$citySize.'&radius='.$radius.'&maxRows='.$maxRows.'&username='.$username;
         $nearbyCities = json_decode(file_get_contents($url))->geonames;
 
-        $returnMe=array();
+        //Create array and fill it with needed data
+        $citiesArray=array();
         foreach($nearbyCities as $city){
             $cityName=$city->name;
             $photoReference=self::getPhotoReference($cityName);
             if($photoReference!="null"){
-                array_push($returnMe,["city"=>$cityName,"photo_reference"=>$photoReference]);
+                array_push($citiesArray,["city"=>$cityName,"photo_reference"=>$photoReference]);
             }
         }
 
-        return $returnMe;
+        //Return response
+        return $citiesArray;
     }
 
 
     //---------------------------- Get Attractions ---------------------------
-    //Get attractions global function.
+    //Function getAttraction(Request $request,$type) is used to get attractions 
+    //of specific type for location from request.
+    //  @request - Request that was received from user.
+    //  @type - Google API place type.
     public function getAttraction(Request $request,$type){
-        if(!JWTValidation($request)){
+        if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized"],401);
-        }else{
-            $location=$request['location'];
 
-            if($location==null || $type==null)
-                return response()->json(["Error" => "Bad Request"],400);
+        $location=$request['location'];
 
-            $url="https://maps.googleapis.com/maps/api/place/textsearch/json?input=".rawurlencode($location)."&inputtype=textquery&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
-            $response=json_decode(file_get_contents($url));
-            
-            //In needed response variable there is only info that is 
-            //needed for front end
-            $neededResponse=self::getAttractionInformationForFrontEnd($response);
-            return $neededResponse;
-        }
+        if($location==null || $type==null)
+            return response()->json(["Error" => "Bad Request"],400);
+
+        $url="https://maps.googleapis.com/maps/api/place/textsearch/json?input=".rawurlencode($location)."&inputtype=textquery&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+        $response=json_decode(file_get_contents($url));
+        
+        //In needed response variable there is only info that is 
+        //needed for front end
+        $neededResponse=self::getAttractionInformationForFrontEnd($response);
+        return $neededResponse;
     }
 
     
-    //Specific get attractions functions
     public function getAttractionParks(Request $request){
         $park_json=self::getAttraction($request,"park");
 
@@ -252,22 +260,8 @@ class GoogleAPIController extends Controller
     //-----------------------------------------------------------------------------------------------------------
     //---------------------------------  O T H E R   F U N C T I O N S ------------------------------------------
     //-----------------------------------------------------------------------------------------------------------
-
-    //This function is used to validate JWT token
-    public function JWTValidation(Request $request){
-        //Decode JWT
-        $decodedObject =JWTDecode($request);
-
-        //Get info from from decoded JWT (currently in JSON format)
-        $email=$decodedObject->email;
-        $password=$decodedObject->password;
-
-        //Check if user exists
-        $exists=UserModel::where('email',$email)->where('password',$password)->exists();
-        return $exists;
-    }
-
-    //This function is used for API endpoint /getphoto
+    //Function getPhotoReference is used to get photo reference for city passed as an argument.
+    //  @cityName - Name of city for which we request photo.
     private function getPhotoReference($cityName){
         $url=("https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=".rawurlencode($cityName)."&inputtype=textquery&fields=photos&key=".env("GOOGLE_API_KEY","somedefaultvalue"));
         if((array)json_decode(file_get_contents($url))->candidates[0]){
@@ -277,9 +271,9 @@ class GoogleAPIController extends Controller
         }
     }
 
-    //Ova formula služi za novo rangiranje attraction prema ratingu
-    //Gleda samo one lokacije koje imaju $place->photos i više od 50 glasova.
-    private function bayesovaFormula($response){
+    //Function bayesFunction is used for new ranking by rating.
+    //because places with 1 vote 5.0 rating is higher than place with 5000 votes and 4.9 rating.
+    private function bayesFormula($response){
         //Izracun ratingova
         //S = wR + (1-w)C
         //w = v/v+m
@@ -291,14 +285,14 @@ class GoogleAPIController extends Controller
 
         $places=json_decode(json_encode($response->results));
         foreach($places as $place){
-            if(isset($place->photos)){ // && && $place->user_ratings_total>=50
+            if(isset($place->photos)){ 
                 $counter++;
                 $suma_ratinga+=$place->rating;
                 $ukupni_broj_glasova+=$place->user_ratings_total;
             }
         }
 
-        //Ipsravak buga?
+        //Rubni uvjet
         if($counter==0)
             return array();
         //Izračun C i m
@@ -324,10 +318,11 @@ class GoogleAPIController extends Controller
         return $noviRating;
     }
 
-    //This function is used to get only information that is needed
-    //for front end from google API
+    //Function getAttractionInformationForFrontEnd($response) is function which
+    //gets only necessary information for frontend.
+    //  @response - Google API response from which we get only necessary data.
     private function getAttractionInformationForFrontEnd($response){
-        $noviRating=self::bayesovaFormula($response);
+        $noviRating=self::bayesFormula($response);
 
         //Vraćanje samo potrebnih informacija
         $counter=0;
@@ -357,6 +352,9 @@ class GoogleAPIController extends Controller
         return $neededInformation;
     }
 
+    //Function DescendingSortByRating(&$array) sorts array in descending order
+    //(higher rating at the top).
+    //  @array - array of places for sorting.
     private function DescendingSortByRating(&$array){
         usort($array,function($a,$b){
             return strcmp($a["rating"],$b["rating"])/(-1);
