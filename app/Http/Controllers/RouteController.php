@@ -14,6 +14,10 @@ use ShortestPath;
 
 class RouteController extends Controller
 {
+    //-----------------------------------------------------------------------------------------------------------
+    //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------
+
     //Planned route
     //This function is called when user presses "Create" on "Route Overview" screen.
     public function planRoute(Request $request){
@@ -280,7 +284,10 @@ class RouteController extends Controller
         return response()->json(["description"=>str_replace("\n","",$description)],200);
     }
 
-    /* ------------------ Other functions ------------------------- */
+
+    //-----------------------------------------------------------------------------------------------------------
+    //---------------------------------  O T H E R   F U N C T I O N S ------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------
     private function GetNearby($latitude,$longitude,$type){
             $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=5000&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
             $response=json_decode(file_get_contents($link));

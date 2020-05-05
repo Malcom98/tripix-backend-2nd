@@ -7,6 +7,10 @@ use Validator;
 
 class PhotoController extends Controller
 {
+    //-----------------------------------------------------------------------------------------------------------
+    //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------
+
     //Function getPhoto(Request $request) is used to retrieve photo from Google API.
     //  @request - Request that was received from user.
     public function getPhoto(Request $request){

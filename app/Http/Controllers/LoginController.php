@@ -10,6 +10,10 @@ use \Firebase\JWT\JWT; //composer require firebase/php-jwt:dev-master
 
 class LoginController extends Controller
 {
+    //-----------------------------------------------------------------------------------------------------------
+    //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------
+
     //Function checkLogin(Request $request) is used to check whether user entered
     //correct or incorrent credentials.
     //If valid credentials were entered, response with JWT token is sent.
