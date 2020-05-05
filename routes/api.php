@@ -17,15 +17,16 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Register
-Route::get('user/stats','UserController@userStats');
-Route::post('users','UserController@userSave');
-Route::post('users/verify','UserController@userVerifyAdress');
-Route::post('users/forgottenPassword','UserController@userForgottenPassword');
-Route::post('users/resetCode','UserController@userResetCode');
-Route::post('users/newPassword','UserController@userNewPassword');
-Route::post('users/loggedNewEmail','UserController@loggedUserNewEmail');
-Route::post('users/loggedNewPassword','UserController@loggedUserNewPassword');
+//ENDPOINT: user
+Route::get('user/stats','UserController@getUserStats');
+//ENDPOINT: users
+Route::post('users','UserController@saveUser');
+Route::post('users/verify','UserController@verifyEmailAddress');
+Route::post('users/forgottenPassword','UserController@sendForgottenPasswordCode');
+Route::post('users/resetCode','UserController@checkResetPasswordCode');
+Route::post('users/newPassword','UserController@setNewPassword');
+Route::post('users/loggedNewEmail','UserController@changeLoggedUserEmailAdress');
+Route::post('users/loggedNewPassword','UserController@changeLoggedUserPassword');
 
 //Login
 Route::post('login','LoginController@store');

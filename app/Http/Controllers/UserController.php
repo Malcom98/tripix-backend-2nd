@@ -13,9 +13,9 @@ use App\Mail\ActivationMail;
 
 class UserController extends Controller
 {
-    //Function userStats(Request $request) is used to return stats about user
+    //Function getUserStats(Request $request) is used to return stats about user
     //  @request - Request that was received from user.
-    public function userStats(Request $request){
+    public function getUserStats(Request $request){
         if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{ 
@@ -49,9 +49,9 @@ class UserController extends Controller
 
         }
     }
-    //Function userSave(Request $request) is used to store new user in database.
+    //Function saveUser(Request $request) is used to store new user in database.
     //  @request - Request that was received from user.
-    public function userSave(Request $request){
+    public function saveUser(Request $request){
         //Validation - Request
         $rules=[
             'name'=>'required|min:3|max:32',
@@ -80,9 +80,9 @@ class UserController extends Controller
                                 "token"=>$jwt],201);
     }
 
-    //Function userVerifyAdress(Request $request) is used to verify E-Mail address with activation code.
+    //Function verifyEmailAddress(Request $request) is used to verify E-Mail address with activation code.
     //  @request - Request that was received from user.
-    public function userVerifyAdress(Request $request){
+    public function verifyEmailAddress(Request $request){
         //Getting data from request into PHP variables
         $email=$request->email;
         $activation_code=$request->activation_code;
@@ -114,10 +114,10 @@ class UserController extends Controller
         }
     }
 
-    //Function userForgottenPassword(Request $request) is used when user enters his email and clicks forgotten password.
+    //Function sendForgottenPasswordCode(Request $request) is used when user enters his email and clicks forgotten password.
     //An new pwd reset code is generated and send to entered email.
     //  @request - Request that was received from user.
-    public function userForgottenPassword(Request $request){
+    public function sendForgottenPasswordCode(Request $request){
         //Get email from request
         $email=$request->email;
 
@@ -142,9 +142,9 @@ class UserController extends Controller
         return response()->json(["message"=>"Reset code has been sent to email."],200);
     }
 
-    //Function userResetCode(Request $request) is used to check whether reset code that user entered is valid.
+    //Function checkResetPasswordCode(Request $request) is used to check whether reset code that user entered is valid.
     //  @request - Request that was received from user.
-    public function userResetCode(Request $request){
+    public function checkResetPasswordCode(Request $request){
         //Get data from request
         $email=$request->email;
         $resetCode=$request->reset_code;
@@ -156,10 +156,10 @@ class UserController extends Controller
             return response()->json(["message"=>"Invalid code."],400);
     }
 
-    //Function userNewPassword(Request $request) is used to set a new password that user entered after validating.
+    //Function setNewPassword(Request $request) is used to set a new password that user entered after validating.
     //reset code.
     //  @request - Request that was received from user.
-    public function userNewPassword(Request $request){
+    public function setNewPassword(Request $request){
         //Validator
         $rules=[
             'new_password'=>'required|min:6',
@@ -185,9 +185,9 @@ class UserController extends Controller
         }
     }
 
-    //Function loggedUserNewEmail(Request $request) is used to set a new email on "Profile" tab when user is logged in.
+    //Function changeLoggedUserEmailAdress(Request $request) is used to set a new email on "Profile" tab when user is logged in.
     //  @request - Request that was received from user.
-    public function loggedUserNewEmail(Request $request){
+    public function changeLoggedUserEmailAdress(Request $request){
         if(!JWTValidation($request)){
             return response()->json(["message"=>"User does not exist."],403);
         }else{
@@ -214,9 +214,9 @@ class UserController extends Controller
         }
     }
 
-    //Function loggedUserNewPassword(Request $request) is used to set a new password on "Profile" tab when user is logged in.
+    //Function changeLoggedUserPassword(Request $request) is used to set a new password on "Profile" tab when user is logged in.
     //  @request - Request that was received from user.
-    public function loggedUserNewPassword(Request $request){
+    public function changeLoggedUserPassword(Request $request){
         if(!JWTValidation($request)){
             return response()->json(["message"=>"User does not exist."],403);
         }else{
