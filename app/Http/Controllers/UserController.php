@@ -13,6 +13,10 @@ use App\Mail\ActivationMail;
 
 class UserController extends Controller
 {
+    //-----------------------------------------------------------------------------------------------------------
+    //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------
+
     //Function getUserStats(Request $request) is used to return stats about user
     //  @request - Request that was received from user.
     public function getUserStats(Request $request){
@@ -68,12 +72,12 @@ class UserController extends Controller
         $hashedPassword=bcrypt($request->password); // Using bcrypt to hash
         $user->password=$hashedPassword; 
         $user->email=$request->email;
-        $verificationCode=self::SendActivationEmail($user);
+        $verificationCode=self::sendActivationEmail($user);
         $user->verified=$verificationCode;
         $user->save();
 
         //Generate new token
-        $jwt = self::GenerateToken($request->email,$hashedPassword);
+        $jwt = self::generateJWTToken($request->email,$hashedPassword);
 
         //Return response
         return response()->json(["message"=>"User sucessfuly created.",
@@ -106,7 +110,7 @@ class UserController extends Controller
             UserModel::where('email',$email)->update(['verified'=>null]);
             $user_id=$user[0]->id;
             $user_fullname=$user[0]->name;
-            $token=self::GenerateToken($user[0]->email,$user[0]->password);
+            $token=self::generateJWTToken($user[0]->email,$user[0]->password);
             return response()->json(["message"=>"Account sucessfully verified.","user_id"=>$user_id,
                                     "full_name"=>$user_fullname,"token"=>$token],200);
         }else{
@@ -126,7 +130,7 @@ class UserController extends Controller
             return response()->json(["message"=>"Invalid email."],403);
 
         //Generate code
-        $code=self::GenerateVerificationCode();
+        $code=self::generateVerificationCode();
 
         //Update code in database
         UserModel::where('email',$email)->update(['pwdresetcode'=>$code]);
@@ -207,7 +211,7 @@ class UserController extends Controller
             UserModel::where('email',$decodedObject->email)->where('password',$decodedObject->password)->update(['email'=>$newEmail]);
 
             //Generate new token
-            $jwt = self::GenerateToken($newEmail,$decodedObject->password);
+            $jwt = self::generateJWTToken($newEmail,$decodedObject->password);
             //Return response
             return response()->json(["message"=>"Email successfully changed.",
                                      "token"=>$jwt],200);
@@ -244,7 +248,7 @@ class UserController extends Controller
             UserModel::where('email',$email)->where('password',$password)->update(["password"=>$newPassword]);
 
             //Generate new token
-            $jwt = self::GenerateToken($email,$newPassword);
+            $jwt = self::generateJWTToken($email,$newPassword);
 
             //Return response
             return response()->json(["message"=>"Password successfuly changed.",
@@ -253,12 +257,15 @@ class UserController extends Controller
     }
 
 
-    //----------------------------------------- Other functions ---------------------------------------
-    //Function GenerateToken($email,$password) is used to generate JWT token depending
+    //-----------------------------------------------------------------------------------------------------------
+    //---------------------------------  O T H E R   F U N C T I O N S ------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------
+    
+    //Function generateJWTToken($email,$password) is used to generate JWT token depending
     //on email and password.
     //  @email - User email.
     //  @password - User password.
-    public function GenerateToken($email,$password){
+    public function generateJWTToken($email,$password){
         $key=env('JWT_SECRET_KEY','somedefaultvalue');
         $payload = array(
             "email"=>$email,
@@ -268,25 +275,28 @@ class UserController extends Controller
         return $jwt;
     }
 
-    //Function SendActivationEmail($user) is used to send email with verification code.
+    //Function sendActivationEmail($user) is used to send email with verification code.
     //  @user - UserModel object.
-    public function SendActivationEmail($user)
+    public function sendActivationEmail($user)
     {
-        $verificationCode=self::GenerateVerificationCode();
+        //Generate verification code
+        $verificationCode=self::generateVerificationCode();
         $email=$user->email;
 
+        //Generate email title and content
         $details = [
             'title' => 'Activation code for Tripix - Travelling Application',
             'body' => 'Your activation code is: '.$verificationCode
         ];
 
+        //Send email
         \Mail::to($email)->send(new ActivationMail($details));
         return $verificationCode;
     }
 
-    //Function GenerateVerificationCode() is used to generate a random
+    //Function generateVerificationCode() is used to generate a random
     //6 digit code.
-    public function GenerateVerificationCode(){
+    public function generateVerificationCode(){
         $verificationCode="";
         $letters="12345678901234567890";
         for($i=0;$i<6;$i++){
