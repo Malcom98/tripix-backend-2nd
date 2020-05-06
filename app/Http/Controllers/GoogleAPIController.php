@@ -10,9 +10,9 @@ use ShortestPath;
 
 class GoogleAPIController extends Controller
 {
-    //-----------------------------------------------------------------------------------------------------------
-    //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
-    //-----------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------- A P I    F U N C T I O N S --------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
 
     //Function getNearbyRestaurants(Request $request) is used to get nearby restaurants based 
     //on latitude and longitude sent in request.
@@ -90,9 +90,8 @@ class GoogleAPIController extends Controller
         foreach($nearbyCities as $city){
             $cityName=$city->name;
             $photoReference=self::getPhotoReference($cityName);
-            if($photoReference!="null"){
+            if($photoReference!="null")
                 array_push($citiesArray,["city"=>$cityName,"photo_reference"=>$photoReference]);
-            }
         }
 
         //Return response
@@ -154,9 +153,14 @@ class GoogleAPIController extends Controller
         return response()->json($attractions,200);
     }
     
-    //-----------------------------------------------------------------------------------------------------------
-    //---------------------------------  O T H E R   F U N C T I O N S ------------------------------------------
-    //-----------------------------------------------------------------------------------------------------------
+
+
+
+
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
+    //-----------------------------------------------------  O T H E R   F U N C T I O N S --------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
+
     //Function getPhotoReference is used to get photo reference for city passed as an argument.
     //  @cityName - Name of city for which we request photo.
     private function getPhotoReference($cityName){
@@ -235,6 +239,7 @@ class GoogleAPIController extends Controller
             $new_locations=self::getNearby($request,$types[$i]);
             $all_locations=array_merge($all_locations,$new_locations);
         }
+        
         $all_locations=RemoveDuplicates($all_locations);
 
         return $all_locations;
