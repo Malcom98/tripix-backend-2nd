@@ -163,11 +163,11 @@ class RouteController extends Controller
 
             //Authenticate user request
             $email=$user[0]->email;
-            $decodedObject = JWTDecode($request);
-            if($email!=$decodedObject->email)
+            $decodedJWT = JWTDecode($request);
+            if($email!=$decodedJWT->email)
                 return response()->json(["Error"=>"Forbidden."],403);
             
-            //GetPlannedRoutes
+            //Get specific routes by status id
             $routes=Route::where('user_id',$user_id)->where('status_id',$status_id)->orderBy('id','desc')->get();
             $plannedRoutes=array();
             foreach($routes as $route){
@@ -241,10 +241,10 @@ class RouteController extends Controller
             return response()->json($validator->errors(),400);
 
         //Check if user that sent request is creator of given route
-        $decodedObject=JWTDecode($request);
+        $decodedJWT=JWTDecode($request);
         $route_id=$request->route_id;
         $place_id=$request->place_id;
-        $user_id=UserModel::where('email',$decodedObject->email)->get()[0]["id"];
+        $user_id=UserModel::where('email',$decodedJWT->email)->get()[0]["id"];
         $route=Route::where('id',$route_id)->where('user_id',$user_id)->get();
         if(count($route)==0)
             return response()->json(["Error"=>"Unauthorized"],403);

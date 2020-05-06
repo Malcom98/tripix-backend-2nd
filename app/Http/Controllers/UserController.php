@@ -24,8 +24,8 @@ class UserController extends Controller
             return response()->json(["Error"=>"Unauthorized"],401);
         }else{ 
             //Get user ID
-            $decodedObject=JWTDecode($request);
-            $user=UserModel::where('email',$decodedObject->email)->get();
+            $decodedJWT=JWTDecode($request);
+            $user=UserModel::where('email',$decodedJWT->email)->get();
             $user_id=$user[0]["id"];
 
             //Get number of finished routes
@@ -207,11 +207,11 @@ class UserController extends Controller
             //Get new email from request
             $newEmail=$request->email;
             //Decode JWT
-            $decodedObject=JWTDecode($request);
-            UserModel::where('email',$decodedObject->email)->where('password',$decodedObject->password)->update(['email'=>$newEmail]);
+            $decodedJWT=JWTDecode($request);
+            UserModel::where('email',$decodedJWT->email)->where('password',$decodedJWT->password)->update(['email'=>$newEmail]);
 
             //Generate new token
-            $jwt = JWTCreate($newEmail,$decodedObject->password);
+            $jwt = JWTCreate($newEmail,$decodedJWT->password);
             //Return response
             return response()->json(["message"=>"Email successfully changed.",
                                      "token"=>$jwt],200);
@@ -235,9 +235,9 @@ class UserController extends Controller
                 return response()->json($validator->errors(),400);
 
             //Check if entered password is equal to current password
-            $decodedObject=JWTDecode($request);
-            $email=$decodedObject->email;
-            $password=$decodedObject->password; // currentPassword
+            $decodedJWT=JWTDecode($request);
+            $email=$decodedJWT->email;
+            $password=$decodedJWT->password; // currentPassword
 
             //Check if entered password is invalid
             if(!Hash::check($request->current_password,$password))
@@ -259,7 +259,7 @@ class UserController extends Controller
 
 
 
-    
+
     //---------------------------------------------------------------------------------------------------------------------------------------------------
     //-----------------------------------------------------  O T H E R   F U N C T I O N S --------------------------------------------------------------
     //---------------------------------------------------------------------------------------------------------------------------------------------------
