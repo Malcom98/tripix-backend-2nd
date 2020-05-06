@@ -192,6 +192,52 @@ class RouteController extends Controller
         }
     }
 
+    //Function getSpecificRoute($request,$id) is used to
+    //get specific detailer information about route with given id.
+    //  @request - Request that was received from user.
+    //  @id - route id that detailed instructions are requested for
+    public function getSpecificRoute(Request $request,$id){
+        //JWT validation
+        if(!JWTValidation($request)){
+            return response()->json(["Error"=>"Unauthorized"],401);
+        }else{
+            //Get data from request
+            $route_id=$id;
+
+            //Get route items
+            $route=Route::where('id',$route_id)->get();
+            $routeItems=RouteItem::where('route_id',$route_id)->get();  
+
+            //Put route items in routeItemsArray object
+            $routeItemsArray=array();
+            foreach($routeItems as $routeItem){
+                $routeItemObject=[
+                    "name"=>$routeItem->name,
+                    "place_id"=>$routeItem->place_reference,
+                    "latitude"=>$routeItem->latitude,
+                    "longitude"=>$routeItem->longitude,
+                    "duration"=>$routeItem->time,
+                    "distance"=>$routeItem->distance,
+                    "photo_reference"=>$routeItem->photo_reference
+                ];
+                array_push($routeItemsArray,$routeItemObject);
+            }
+
+
+            $specificRoute=[
+                "route_id"=>$route[0]->id,
+                "location"=>$route[0]->location,
+                "locations"=>$routeItemsArray,
+                "route"=>$route[0]->route,
+                "duration"=>$route[0]->total_time,
+                "distance"=>$route[0]->total_distance
+            ];
+
+            //Returning array of planned route objects
+            return $specificRoute;
+        }
+    }
+
     //Function getPlaceDescription(Request $request,$id) is used to get
     //best review on location from Google API.
     //  @request - Request that was received from user.
