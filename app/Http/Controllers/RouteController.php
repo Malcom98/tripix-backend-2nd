@@ -94,18 +94,10 @@ class RouteController extends Controller
         $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
 
         //Get nearby attractions
-        $tourist_attraction_json=self::getNearby($latitude,$longitude,"tourist_attraction");
-        $amusement_park_json=self::getNearby($latitude,$longitude,"amusement_park");
-        $museum_json=self::getNearby($latitude,$longitude,"museum");
-        $library_json=self::getNearby($latitude,$longitude,"library");
-        $park_json=self::getNearby($latitude,$longitude,"park");
-        $stadium_json=self::getNearby($latitude,$longitude,"stadium");
-        $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,
-                $museum_json,$library_json,$park_json,$stadium_json);
-        $mergedArray=RemoveDuplicates($mergedArray);
+        $nearbyAttractions=self::getNearbyAttractions($latitude,$longitude);
 
         //Get number of attractions for route
-        $totalNumber=count($mergedArray);
+        $totalNumber=count($nearbyAttractions);
         if($totalNumber<6)
             return response()->json("We're sorry, but this place does not have enough attractions to generate a route.");
         
@@ -113,56 +105,20 @@ class RouteController extends Controller
         //because Google Directions API allows maximum 25 waypoints
         if($totalNumber>25)
             $totalNumber=25;
+
+        //Make random route
         $largeRouteCount=$totalNumber-($totalNumber/5); $largeRoute=array();
         $middleRouteCount=$largeRouteCount/2; $middleRoute=array();
         $miniRouteCount=$middleRouteCount/2; $miniRoute=array();
-        $usedIndices=array();
+        self::makeRandomRoute($totalNumber,$miniRouteCount,$middleRouteCount,$largeRouteCount,
+                                $miniRoute,$middleRoute,$largeRoute,$nearbyAttractions);
         
-        $id=rand(0,$totalNumber);
-        for($i=0;$i<$largeRouteCount;$i++){
-            while(in_array($id,$usedIndices))
-                $id=rand(0,$totalNumber-1);
-            array_push($usedIndices,$id);
-            
-            if($i<$miniRouteCount) array_push($miniRoute,$mergedArray[$id]);
-            if($i<$middleRouteCount) array_push($middleRoute,$mergedArray[$id]);
-            if($i<$largeRouteCount) array_push($largeRoute,$mergedArray[$id]);
-        }
-        
-        //Mini route
-        $miniRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($miniRoute)));
-        $miniRouteTime=json_decode(ShortestPath::getShortestPath($miniRouteRequestObject->origin,
-            $miniRouteRequestObject->destination,$miniRouteRequestObject->waypoints,false))->duration;
-        
-        $miniRouteInfo=[
-            "number_attractions"=>count($miniRoute),
-            "duration"=>$miniRouteTime,
-            "name"=>"Mini route",
-            "photo_ref"=>$largeRoute[$miniRouteCount-1]->photo_reference
-        ];
+        //Create information about objects
+        $miniRouteInfo=self::makeRouteObject($miniRoute,$miniRouteCount,$largeRoute,"Mini Route");
+        $middleRouteInfo=self::makeRouteObject($middleRoute,$middleRouteCount,$largeRoute,"Middle Route");
+        $largeRouteInfo=self::makeRouteObject($largeRoute,$largeRouteCount,$largeRoute,"Large Route");
 
-        //Middle route
-        $middleRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($middleRoute)));
-        $middleRouteTime=json_decode(ShortestPath::getShortestPath($middleRouteRequestObject->origin,
-            $middleRouteRequestObject->destination,$middleRouteRequestObject->waypoints,false))->duration;
-        $middleRouteInfo=[
-            "number_attractions"=>count($middleRoute),
-            "duration"=>$middleRouteTime,
-            "name"=>"Middle route",
-            "photo_ref"=>$largeRoute[$middleRouteCount-1]->photo_reference
-        ];
-
-        //Large Route
-        $largeRouteRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($largeRoute)));
-        $largeRouteTime=json_decode(ShortestPath::getShortestPath($largeRouteRequestObject->origin,
-            $largeRouteRequestObject->destination,$largeRouteRequestObject->waypoints,false))->duration;
-        $largeRouteInfo=[
-            "number_attractions"=>count($largeRoute),
-            "duration"=>$largeRouteTime,
-            "name"=>"Large route",
-            "photo_ref"=>$largeRoute[$largeRouteCount-1]->photo_reference
-        ];
-
+        //Return response
         return response()->json(["attractions"=>$largeRoute,
                                 "routes"=>array($miniRouteInfo,
                                 $middleRouteInfo,
@@ -424,5 +380,67 @@ class RouteController extends Controller
             $routeItem->save();
             $order_counter++;
         }
+    }
+
+    //Function getNearbyAttractions($latitude,$longitude) is used to get
+    //nearby attractions(amusement parks, museums, libraries, parks, stadiums)
+    //based on latitude and longitude given in arguments.
+    //  @latitude - Latitude of place we want to get nearby locations.
+    //  @longitude - Longitude of place we want to get nearby locations.
+    private function getNearbyAttractions($latitude,$longitude){
+        $tourist_attraction_json=self::getNearby($latitude,$longitude,"tourist_attraction");
+        $amusement_park_json=self::getNearby($latitude,$longitude,"amusement_park");
+        $museum_json=self::getNearby($latitude,$longitude,"museum");
+        $library_json=self::getNearby($latitude,$longitude,"library");
+        $park_json=self::getNearby($latitude,$longitude,"park");
+        $stadium_json=self::getNearby($latitude,$longitude,"stadium");
+        $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,
+                $museum_json,$library_json,$park_json,$stadium_json);
+        $mergedArray=RemoveDuplicates($mergedArray);
+
+        return $mergedArray;
+    }
+
+    //Function makeRandomRoute($totalNumber,$miniRouteCount,$middleRouteCount,$largeRouteCount,&$miniRoute,&$middleRoute,&$largeRoute,$nearbyAttractions)
+    //is used to make a random mini,middle and large route based on nearby attractions.
+    //  @totalNumber - Total number of attractions.
+    //  @miniRouteCount,middleRouteCount,largeRouteCount - Number of attractions in each route.
+    //  @&miniRoute,&middleRoute,&largeRoute - (ref) Array of routes.
+    //  @nearbyAttractions - Array of nearby attractions based on current latitude and longitude.
+    private function makeRandomRoute($totalNumber,$miniRouteCount,$middleRouteCount,$largeRouteCount,
+                                                              &$miniRoute,&$middleRoute,&$largeRoute,$nearbyAttractions){
+        $usedIndices=array();
+
+        $id=rand(0,$totalNumber);
+        for($i=0;$i<$largeRouteCount;$i++){
+            while(in_array($id,$usedIndices))
+                $id=rand(0,$totalNumber-1);
+            array_push($usedIndices,$id);
+            
+            if($i<$miniRouteCount) array_push($miniRoute,$nearbyAttractions[$id]);
+            if($i<$middleRouteCount) array_push($middleRoute,$nearbyAttractions[$id]);
+            if($i<$largeRouteCount) array_push($largeRoute,$nearbyAttractions[$id]);
+        }
+    }
+
+    //Function makeRouteObject($route,$routeCount,&$largeRoute,$routeName) creates basic information
+    //about route that is shown on "Suggested routes screen".
+    //  @route - (ref) - Array of route objecst that are in route.
+    //  @routeCount - Count of objects in route.
+    //  @largeRoute - (ref) - Large route array of objects.
+    //  @routeName - Name of route that will be given in response.
+    private function makeRouteObject(&$route,$routeCount,&$largeRoute,$routeName){
+        $routeRequestObject=json_decode(json_encode(ShortestPath::createObjectForShortestPath($route)));
+        $routeTime=json_decode(ShortestPath::getShortestPath($routeRequestObject->origin,
+            $routeRequestObject->destination,$routeRequestObject->waypoints,false))->duration;
+        
+        $routeInfo=[
+            "number_attractions"=>count($route),
+            "duration"=>$routeTime,
+            "name"=>$routeName,
+            "photo_ref"=>$largeRoute[$routeCount-1]->photo_reference
+        ];
+
+        return $routeInfo;
     }
 }
