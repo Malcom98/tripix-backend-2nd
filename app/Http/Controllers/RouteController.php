@@ -14,9 +14,9 @@ use ShortestPath;
 
 class RouteController extends Controller
 {
-    //-----------------------------------------------------------------------------------------------------------
-    //------------------------------------- A P I    F U N C T I O N S ------------------------------------------
-    //-----------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------  A P I   F U N C T I O N S --------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
     //Function newRoute(Request $request) is used to generate shortest path based on user request.
     //  @request - Request that was received from user.
     public function newRoute(Request $request){
@@ -87,11 +87,7 @@ class RouteController extends Controller
             return response()->json(["Error"=>"Unauthorized."],401);
 
         //Get coordinates of a given city
-        $url="https://maps.googleapis.com/maps/api/geocode/json?address=".rawurlencode($place)."&key=".env("GOOGLE_API_KEY", "somedefaultvalue"); 
-        $googleApiResponse=file_get_contents($url);
-        $googleApiResponse=json_decode($googleApiResponse);
-        $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
-        $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
+        [$latitude,$longitude]=self::getCoordinatesOfCity($place);
 
         //Get nearby attractions
         $nearbyAttractions=self::getNearbyAttractions($latitude,$longitude);
@@ -106,7 +102,7 @@ class RouteController extends Controller
         if($totalNumber>25)
             $totalNumber=25;
 
-        //Make random route
+        //Make random routes
         $largeRouteCount=$totalNumber-($totalNumber/5); $largeRoute=array();
         $middleRouteCount=$largeRouteCount/2; $middleRoute=array();
         $miniRouteCount=$middleRouteCount/2; $miniRoute=array();
@@ -258,9 +254,28 @@ class RouteController extends Controller
         return response()->json(["Message"=>"Ok"],200);
     }
 
-    //-----------------------------------------------------------------------------------------------------------
-    //---------------------------------  O T H E R   F U N C T I O N S ------------------------------------------
-    //-----------------------------------------------------------------------------------------------------------
+
+
+
+
+
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
+    //-----------------------------------------------------  O T H E R   F U N C T I O N S --------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------
+    //Function getCoordinatesOfCity($place) returns object of
+    //coordinates with latitude and longitude.
+    //  @place - Place name
+    private function getCoordinatesOfCity($place){
+        $url="https://maps.googleapis.com/maps/api/geocode/json?address=".rawurlencode($place)."&key=".env("GOOGLE_API_KEY", "somedefaultvalue"); 
+        $googleApiResponse=file_get_contents($url);
+        $googleApiResponse=json_decode($googleApiResponse);
+        $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
+        $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
+
+        $coordinates=array($latitude,$longitude);
+        return $coordinates;
+    }
+
     //Function getNearby($latitude,$longitude,$type) is used to
     //get specific nearby locations based on latitude and longitude coordinations.
     //  @latitude - Latitude of current location. 
