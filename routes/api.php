@@ -62,6 +62,7 @@ Route::get('/route/started_routes/{id}','RouteController@getStartedRoutes');
 Route::get('/route/finished_routes/{id}','RouteController@getFinishedRoutes');
 Route::get('/route/specific_route/{id}','RouteController@getSpecificRoute');
 Route::get('/route/suggested_route/{place}','RouteController@getSuggestedRoutes');
+Route::post('/route_item/completed','RouteController@completeRouteWaypoint');
 
 //Place
 Route::get('/place/{id}','RouteController@getPlaceDescription');

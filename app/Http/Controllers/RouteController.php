@@ -270,6 +270,38 @@ class RouteController extends Controller
     }
 
 
+    //Function completeRouteWaypoint(Request $request) is used to change row attribute completed
+    //from 0 to 1 and mark waypoint as visited
+    //  @request - Request that was received from user.
+    public function completeRouteWaypoint(Request $request){
+        //JWT Validation
+        if(!JWTValidation($request))
+            return response()->json(["Error"=>"Unauthorized"],401);
+        
+        //Validation
+        $rules=[
+            'route_id'=>'required',
+            'place_id'=>'required'
+        ];
+
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails())
+            return response()->json($validator->errors(),400);
+
+        //Check if user that sent request is creator of given route
+        $decodedObject=JWTDecode($request);
+        $route_id=$request->route_id;
+        $place_id=$request->place_id;
+        $user_id=UserModel::where('email',$decodedObject->email)->get()[0]["id"];
+        $route=Route::where('id',$route_id)->where('user_id',$user_id)->get();
+        if(count($route)==0)
+            return response()->json(["Error"=>"Unauthorized"],403);
+
+        //Change waypoint to completed
+        RouteItem::where('route_id',$route_id)->where('place_reference',$place_id)->update(["completed"=>"1"]);
+        return response()->json(["Message"=>"Ok"],200);
+    }
+
     //-----------------------------------------------------------------------------------------------------------
     //---------------------------------  O T H E R   F U N C T I O N S ------------------------------------------
     //-----------------------------------------------------------------------------------------------------------
