@@ -18,96 +18,31 @@ class GoogleAPIController extends Controller
     //------------------------ Google API Functions ---------------------
     //-------------------------------------------------------------------
 
-    //---------------------------- Get Nearby ---------------------------    
-    //Function getNearby($latitude,$longitude,$type) is used to
-    //get specific nearby locations based on latitude and longitude coordinations.
-    //  @latitude - Latitude of current location. 
-    //  @longitude - Longitude of current location. 
-    //  @Type - Google API place type. 
-    public function getNearby(Request $request,$type){
-        if(!JWTValidation($request))
-            return response()->json(["Error"=>"Unauthorized"],401);
-        
-        //Get data from request
-        $latitude=$request['lat'];
-        $longitude=$request['long'];
-
-        //Check if request is not valid
-        if(is_null($longitude) || is_null($latitude))
-            return response()->json(["Error"=>"Bad Request."],400);
-
-        //Create link
-        $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=1500&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
-        $response=json_decode(file_get_contents($link));
-        $response=$response->results;
-
-        //Create response array and fill it with data
-        $responseArray=array();
-        foreach($response as $r){
-                if(isset($r->photos[0]->photo_reference) && isset($r->rating)){
-                $place_id=$r->place_id;
-                $latitude=$r->geometry->location->lat;
-                $longitude=$r->geometry->location->lng;
-                $photo_reference=$r->photos[0]->photo_reference;
-                $rating=$r->rating;
-                $name=$r->name;
-
-                $ro=[
-                    "place_id"=>$place_id,
-                    "latitude"=>$latitude,
-                    "longitude"=>$longitude,
-                    "photo_reference"=>$photo_reference,
-                    "rating"=>$rating,
-                    "name"=>$name
-                ];
-                array_push($responseArray,$ro);
-            }
-        }
-
-        //Return response
-        return $responseArray;
-    }
+    
 
     public function getNearbyRestaurants(Request $request){
-        $restaurants = self::getNearby($request,"restaurant");
-        return response()->json($restaurants,200);
+        $types=array("restaurant");
+        $all_locations=self::getNearbyPlacesByTypes($request,$types);
+        return response()->json($all_locations,200);
     }
 
     public function getNearbyCafes(Request $request){
-        $bar_json=self::getNearby($request,"bar");
-        $cafe_json=self::getNearby($request,"cafe");
-        $mergedArray=array_merge($bar_json,$cafe_json);
-        $mergedArray=RemoveDuplicates($mergedArray);
-        return response()->json($mergedArray,200);
+        $types=array("bar","cafe");
+        $nearby_locations=self::getNearbyPlacesByTypes($request,$types);
+        return response()->json($nearby_locations,200);
     }
 
     public function getNearbyShops(Request $request){
-        $shopping_mall_json=self::getNearby($request,"shopping_mall");
-        $store_json=self::getNearby($request,"store");
-        $supermarket_json=self::getNearby($request,"supermarket");
-        $mergedArray=  array_merge($shopping_mall_json,$store_json,$supermarket_json);
-        $mergedArray= RemoveDuplicates($mergedArray);
-        return response()->json($mergedArray,200);
+        $types=array("shopping_mall","store","supermarket");
+        $nearby_locations=self::getNearbyPlacesByTypes($request,$types);
+        return response()->json($nearby_locations,200);
     }
 
     public function getNearbyAttractions(Request $request){
-        $tourist_attraction_json=self::getNearby($request,"tourist_attraction");
-        $amusement_park_json=self::getNearby($request,"amusement_park");
-        $art_gallery_json=self::getNearby($request,"art_gallery");
-        $synagogue_json=self::getNearby($request,"synagogue");
-        $city_hall_json=self::getNearby($request,"city_hall");
-        $courthouse_json=self::getNearby($request,"courthouse");
-        $embassy_json=self::getNearby($request,"embassy");
-        $museum_json=self::getNearby($request,"museum");
-        $library_json=self::getNearby($request,"library");
-        $park_json=self::getNearby($request,"park");
-        $stadium_json=self::getNearby($request,"stadium");
-
-        $mergedArray=array_merge($tourist_attraction_json,$amusement_park_json,$art_gallery_json,
-                $synagogue_json,$city_hall_json,$courthouse_json,$embassy_json,
-                $library_json,$park_json,$stadium_json);
-        $mergedArray=RemoveDuplicates($mergedArray);
-        return response()->json($mergedArray,200);
+        $types=array("tourist_attraction","amusement_park","art_gallery","synagogue","city_hall",
+                        "courthouse","embassy","museum","library","park","stadium");
+        $nearby_locations=self::getNearbyPlacesByTypes($request,$types);
+        return response()->json($nearby_locations,200);
     }
 
     //Function getNearbyCities(Request $request) is using GeoNames API
@@ -346,5 +281,70 @@ class GoogleAPIController extends Controller
         usort($array,function($a,$b){
             return strcmp($a["rating"],$b["rating"])/(-1);
         });
+    }
+
+    //Function getNearbyPlacesByTypes($request,&$types) is used to get nearby places for user
+    //that is requesting specific Google API types (museums, amusement_parks, universities, etc).
+    //  @request - Request that was received from user.
+    //  @types - Array of google api types. (museums, amusement_parks, universities, etc)
+    private function getNearbyPlacesByTypes($request,&$types){
+        $all_locations=self::getNearby($request,$types[0]);
+
+        for($i=1;$i<count($types);$i++){
+            $new_locations=self::getNearby($request,$types[$i]);
+            array_merge($all_locations,$new_locations);
+        }
+        $all_locations=RemoveDuplicates($all_locations);
+        return $all_locations;
+    }
+
+    //---------------------------- Get Nearby ---------------------------    
+    //Function getNearby($latitude,$longitude,$type) is used to
+    //get specific nearby locations based on latitude and longitude coordinations.
+    //  @latitude - Latitude of current location. 
+    //  @longitude - Longitude of current location. 
+    //  @Type - Google API place type. 
+    public function getNearby(Request $request,$type){
+        if(!JWTValidation($request))
+            return response()->json(["Error"=>"Unauthorized"],401);
+        
+        //Get data from request
+        $latitude=$request['lat'];
+        $longitude=$request['long'];
+
+        //Check if request is not valid
+        if(is_null($longitude) || is_null($latitude))
+            return response()->json(["Error"=>"Bad Request."],400);
+
+        //Create link
+        $link="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=".$latitude.",".$longitude."&radius=1500&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+        $response=json_decode(file_get_contents($link));
+        $response=$response->results;
+
+        //Create response array and fill it with data
+        $responseArray=array();
+        foreach($response as $r){
+                if(isset($r->photos[0]->photo_reference) && isset($r->rating)){
+                $place_id=$r->place_id;
+                $latitude=$r->geometry->location->lat;
+                $longitude=$r->geometry->location->lng;
+                $photo_reference=$r->photos[0]->photo_reference;
+                $rating=$r->rating;
+                $name=$r->name;
+
+                $ro=[
+                    "place_id"=>$place_id,
+                    "latitude"=>$latitude,
+                    "longitude"=>$longitude,
+                    "photo_reference"=>$photo_reference,
+                    "rating"=>$rating,
+                    "name"=>$name
+                ];
+                array_push($responseArray,$ro);
+            }
+        }
+
+        //Return response
+        return $responseArray;
     }
 }
