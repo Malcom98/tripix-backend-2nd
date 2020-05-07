@@ -18,51 +18,45 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 //ENDPOINT: user
+Route::post('user/login','LoginController@checkLogin');
+Route::post('user/register','UserController@saveUser');
 Route::get('user/stats','UserController@getUserStats');
-//ENDPOINT: users
-Route::post('users','UserController@saveUser');
-Route::post('users/verify','UserController@verifyEmailAddress');
-Route::post('users/forgottenPassword','UserController@sendForgottenPasswordCode');
-Route::post('users/resetCode','UserController@checkResetPasswordCode');
-Route::post('users/newPassword','UserController@setNewPassword');
-Route::post('users/loggedNewEmail','UserController@changeLoggedUserEmailAdress');
-Route::post('users/loggedNewPassword','UserController@changeLoggedUserPassword');
+Route::post('user/verify','UserController@verifyEmailAddress');
+Route::post('user/password/forgot','UserController@sendForgottenPasswordCode');
+Route::post('user/password/code','UserController@checkResetPasswordCode');
+Route::post('user/password/new','UserController@setNewPassword');
+Route::post('user/change-email','UserController@changeLoggedUserEmailAdress');
+Route::post('user/change-password','UserController@changeLoggedUserPassword');
 
-//Login
-Route::post('login','LoginController@checkLogin');
+//ENDPOINT: nearby
+Route::get('nearby/restaurants','GoogleAPIController@getNearbyRestaurants');
+Route::get('nearby/cafes','GoogleAPIController@getNearbyCafes');
+Route::get('nearby/shops','GoogleAPIController@getNearbyShops');
+Route::get('nearby/attractions','GoogleAPIController@getNearbyAttractions');
+Route::get('nearby/cities','GoogleAPIController@getNearbyCities');
 
+//ENDPOINT: attractions
+Route::get('attractions/parks','GoogleAPIController@getAttractionParks');
+Route::get('attractions/stadiums','GoogleAPIController@getAttractionStadiums');
+Route::get('attractions/pets','GoogleAPIController@getAttractionPets');
+Route::get('attractions/schools','GoogleAPIController@getAttractionSchools');
+Route::get('attractions/religions','GoogleAPIController@getAttractionReligions');
+Route::get('attractions/landmarks','GoogleAPIController@getAttractionLandmarks');
 
-//GetPhoto
-Route::get('getphoto','PhotoController@getPhoto');
+//ENDPOINT: photo
+Route::get('photo','PhotoController@getPhoto');
 
-//Nearby
-Route::get('/nearby/restaurants','GoogleAPIController@getNearbyRestaurants');
-Route::get('/nearby/cafes','GoogleAPIController@getNearbyCafes');
-Route::get('/nearby/shops','GoogleAPIController@getNearbyShops');
-Route::get('/nearby/attractions','GoogleAPIController@getNearbyAttractions');
-//Nearby cities
-Route::get('/nearby/cities','GoogleAPIController@getNearbyCities');
+//ENDPOINT: route
+Route::post('route/new','RouteController@newRoute');
+Route::post('route/plan','RouteController@planRoute');
+Route::post('route/start','RouteController@startRoute');
+Route::post('route/finish','RouteController@finishRoute');
+Route::get('route/planned','RouteController@getPlannedRoutes');
+Route::get('route/started','RouteController@getStartedRoutes');
+Route::get('route/finished','RouteController@getFinishedRoutes');
+Route::get('route/{id}','RouteController@getSpecificRoute');
+Route::get('route/suggested/{place}','RouteController@getSuggestedRoutes');
+Route::post('route-item/completed','RouteController@completeRouteWaypoint');
 
-
-//Find attractions in specific place
-Route::get('/attractions/parks','GoogleAPIController@getAttractionParks');
-Route::get('/attractions/stadiums','GoogleAPIController@getAttractionStadiums');
-Route::get('/attractions/pets','GoogleAPIController@getAttractionPets');
-Route::get('/attractions/schools','GoogleAPIController@getAttractionSchools');
-Route::get('/attractions/religions','GoogleAPIController@getAttractionReligions');
-Route::get('/attractions/landmarks','GoogleAPIController@getAttractionLandmarks');
-
-//Routes
-Route::post('/route/new_route','RouteController@newRoute');
-Route::post('/route/plan_route','RouteController@planRoute');
-Route::post('/route/start_route','RouteController@startRoute');
-Route::post('/route/finish_route','RouteController@finishRoute');
-Route::get('/route/planned_routes','RouteController@getPlannedRoutes');
-Route::get('/route/started_routes','RouteController@getStartedRoutes');
-Route::get('/route/finished_routes','RouteController@getFinishedRoutes');
-Route::get('/route/specific_route/{id}','RouteController@getSpecificRoute');
-Route::get('/route/suggested_route/{place}','RouteController@getSuggestedRoutes');
-Route::post('/route_item/completed','RouteController@completeRouteWaypoint');
-
-//Place
+//ENDPOINT: place
 Route::get('/place/{id}','RouteController@getPlaceDescription');
