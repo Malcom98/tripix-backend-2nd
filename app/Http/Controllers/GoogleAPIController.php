@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\UserModel;
 use \Firebase\JWT\JWT;
+use Validator;
 use App\Controllers\RouteController;
 use ShortestPath;
 
@@ -58,13 +59,18 @@ class GoogleAPIController extends Controller
         if(!JWTValidation($request))
             return response()->json(["Error"=>"Unauthorized."],401);
 
-        //Get latitude and longitude from JSON
-        $latitude=$request['lat'];
-        $longitude=$request['long'];
+        $rules=[
+            'lat'=>'required',
+            'long'=>'required'
+        ];
 
-        //Check longitude and latitude
-        if($latitude == null || $longitude == null)
-            return response()->json(["Error"=>"Bad Request"],400);
+        $validator=Validator::make($request->all(),$rules);
+        if($validator->fails())
+            return response()->json(["Error"=>"Bad request."],400);
+
+        //Get latitude and longitude from JSON
+        $latitude=$request->lat;
+        $longitude=$request->long;
 
         $nearbyCities=self::getNearbyPlacesArray($latitude,$longitude);
 

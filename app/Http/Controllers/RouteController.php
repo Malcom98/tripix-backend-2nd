@@ -87,7 +87,11 @@ class RouteController extends Controller
             return response()->json(["Error"=>"Unauthorized."],401);
 
         //Get coordinates of a given city
-        [$latitude,$longitude]=self::getCoordinatesOfCity($place);
+        $url="https://maps.googleapis.com/maps/api/geocode/json?address=".rawurlencode($place)."&key=".env("GOOGLE_API_KEY", "somedefaultvalue"); 
+        $googleApiResponse=file_get_contents($url);
+        $googleApiResponse=json_decode($googleApiResponse);
+        $latitude=json_encode($googleApiResponse->results[0]->geometry->location->lat);
+        $longitude=json_encode($googleApiResponse->results[0]->geometry->location->lng);
 
         //Get nearby attractions
         $nearbyAttractions=self::getNearbyAttractions($latitude,$longitude);
