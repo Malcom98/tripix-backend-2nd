@@ -126,50 +126,39 @@ class RouteController extends Controller
                                 200);
     }
 
-    //Function getPlannedRoutes(Request $request,$id) is used to get planned routes
+    //Function getPlannedRoutes(Request $request) is used to get planned routes
     //for user that requested his planned routes.
     //  @request - Request that was received from user.
-    //  @id - user id
-    public function getPlannedRoutes(Request $request,$id){
-        return self::getSpecificGroupRoutes($request,'1',$id);
+    public function getPlannedRoutes(Request $request){
+        return self::getSpecificGroupRoutes($request,'1');
     }
 
-    //Function getStartedRoutes(Request $request,$id) is used to get planned routes
+    //Function getStartedRoutes(Request $request) is used to get planned routes
     //for user that requested his planned routes.
     //  @request - Request that was received from user.
-    //  @id - user id
-    public function getStartedRoutes(Request $request,$id){
-        return self::getSpecificGroupRoutes($request,'2',$id);
+    public function getStartedRoutes(Request $request){
+        return self::getSpecificGroupRoutes($request,'2');
     }
 
-    //Function getFinishedRoutes(Request $request,$id) is used to get planned routes
+    //Function getFinishedRoutes(Request $request) is used to get planned routes
     //for user that requested his planned routes.
     //  @request - Request that was received from user.
-    //  @id - user id
-    public function getFinishedRoutes(Request $request,$id){
-        return self::getSpecificGroupRoutes($request,'3',$id);
+    public function getFinishedRoutes(Request $request){
+        return self::getSpecificGroupRoutes($request,'3');
     }
 
-    //Function getSpecificGroupRoutes($request,$status_id,$user_id) is used to
+    //Function getSpecificGroupRoutes($request,$status_id) is used to
     //get to retrieve group routes based on route status_id.
     //  @request - Request that was received from user.
     //  @status_id - Route status id (1 - Planned, 2 - Started, 3 - Finished, 4 - Suggested)
-    //  @user_id - user_id which requested specific group routes
-    public function getSpecificGroupRoutes($request,$status_id,$user_id){
+    public function getSpecificGroupRoutes($request,$status_id){
         //JWT validation
         if(!JWTValidation($request)){
             return response()->json(["Error"=>"Unauthorized."],401);
         }else{
-            //Check if user input is correct
-            $user=UserModel::where('id',$user_id)->get();
-            if(count($user)==0)
-                return response()->json(["Message"=>"There is no user with given ID."],400);
-
-            //Authenticate user request
-            $email=$user[0]->email;
             $decodedJWT = JWTDecode($request);
-            if($email!=$decodedJWT->email)
-                return response()->json(["Error"=>"Forbidden."],403);
+            $user=UserModel::where('email',$decodedJWT->email)->get();
+            $user_id=$user[0]["id"];
             
             //Get specific routes by status id
             $routes=Route::where('user_id',$user_id)->where('status_id',$status_id)->orderBy('id','desc')->get();
