@@ -12,7 +12,8 @@ class ActivationMail extends Mailable
     use Queueable, SerializesModels;
   
     public $details;
-   
+    public $subject;
+    
     /**
      * Create a new message instance.
      *
@@ -21,6 +22,7 @@ class ActivationMail extends Mailable
     public function __construct($details)
     {
         $this->details = $details;
+        $this->subject = "Tripix - Activation email";
     }
    
     /**
@@ -30,7 +32,6 @@ class ActivationMail extends Mailable
      */
      public function build()
     {
-        return $this->subject('Activation code for Tripix')
-                    ->view('emails.activationEmail');
+        return $this->view('emails.activationEmail');
     }
 }

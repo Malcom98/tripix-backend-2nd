@@ -12,6 +12,7 @@ class ResetPasswordMail extends Mailable
     use Queueable, SerializesModels;
   
     public $details;
+    public $subject;
    
     /**
      * Create a new message instance.
@@ -21,6 +22,7 @@ class ResetPasswordMail extends Mailable
     public function __construct($details)
     {
         $this->details = $details;
+        $this->subject = "Tripix - Reset password code";
     }
    
     /**
@@ -30,7 +32,6 @@ class ResetPasswordMail extends Mailable
      */
      public function build()
     {
-        return $this->subject('Reset Password code for Tripix')
-                    ->view('emails.resetPasswordEmail');
+        return $this->view('emails.resetPasswordEmail');
     }
 }

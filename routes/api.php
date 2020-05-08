@@ -59,4 +59,4 @@ Route::get('route/suggested/{place}','RouteController@getSuggestedRoutes');
 Route::post('route-item/completed','RouteController@completeRouteWaypoint');
 
 //ENDPOINT: place
-Route::get('/place/{id}','RouteController@getPlaceDescription');
+Route::get('place/{id}','RouteController@getPlaceDescription');

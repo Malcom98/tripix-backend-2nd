@@ -10,6 +10,7 @@ use Validator;
 use Hash;
 use \Firebase\JWT\JWT;
 use App\Mail\ActivationMail;
+use App\Mail\ResetPasswordMail;
 
 class UserController extends Controller
 {
@@ -137,10 +138,11 @@ class UserController extends Controller
 
         //Send email
         $details = [
-            'title' => 'Password Reset Code for Tripix - Travelling Application',
-            'body' => 'Your password reset code is: '.$code
+            'title' => 'Tripix - Password Reset',
+            'body' => 'Your password reset code is: ',
+            'code' => $code
         ];
-        \Mail::to($email)->send(new ActivationMail($details));
+        \Mail::to($email)->send(new ResetPasswordMail($details));
 
         //Return response
         return response()->json(["message"=>"Reset code has been sent to email."],200);
@@ -274,8 +276,9 @@ class UserController extends Controller
 
         //Generate email title and content
         $details = [
-            'title' => 'Activation code for Tripix - Travelling Application',
-            'body' => 'Your activation code is: '.$verificationCode
+            'title' => 'Tripix - Activation Code',
+            'body' => 'Your activation code is: ',
+            'code' => $verificationCode
         ];
 
         //Send email
