@@ -11,6 +11,7 @@ class ShortestPath{
         //Getting content
         $link=self::createLink($origin,$destination,$waypoints,$userRequest);
         $googleDirectionsResponse = json_decode(file_get_contents($link));
+
         //Data needed for response
         $locations=array();
         $polyline=$googleDirectionsResponse->routes[0]->overview_polyline->points; // Sada mi se ovo nalazi u stringu
@@ -32,12 +33,15 @@ class ShortestPath{
         $destination_distance;
         $destination_duration;
         foreach($googleDirectionsResponse->routes[0]->legs as $path){
+            //DESTINATION!!!
             //Skip destination jer je ona stavljena u legs kao posljednji objekt u arrayu
             if($counter==count($googleDirectionsResponse->routes[0]->legs)){
-                $destination_duration=explode(' ',$path->duration->text)[0];
-                $destination_distance=explode(' ',$path->distance->text)[0];
-                $total_distance+=explode(' ',$path->distance->text)[0];
-                $total_duration+=explode(' ',$path->duration->text)[0];
+                $distance=round($path->distance->value/1000,2);
+                $duration=explode(' ',$path->duration->text)[0];
+                $destination_duration=$duration;
+                $total_duration+=$distance;
+                $destination_distance=$distance;
+                $total_distance+=$duration;
                 break;
             }
 
@@ -48,8 +52,14 @@ class ShortestPath{
                 $place_latitude=$waypoints[$coordinates[$counter-1]]->lat;
                 $place_longitude=$waypoints[$coordinates[$counter-1]]->long;
             }
-            $place_duration=explode(' ',$path->duration->text)[0];
-            $place_distance=explode(' ',$path->distance->text)[0];
+
+            //WAYPOINT!!!
+            $distance=round($path->distance->value/1000,2);
+            $duration=explode(' ',$path->duration->text)[0];
+            $place_duration=$duration;
+            $total_duration+=$duration;
+            $place_distance=$distance;
+            $total_distance+=$distance;
 
             $waypoint=[
                 "latitude"=>$place_latitude,
@@ -60,9 +70,6 @@ class ShortestPath{
 
             array_push($locations,$waypoint);
             $counter++;
-
-            $total_distance+=explode(' ',$path->distance->text)[0];
-            $total_duration+=explode(' ',$path->duration->text)[0];
         }
 
         //Adding destination to locations array
