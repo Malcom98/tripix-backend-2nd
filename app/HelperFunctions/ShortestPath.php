@@ -37,11 +37,11 @@ class ShortestPath{
             //Skip destination jer je ona stavljena u legs kao posljednji objekt u arrayu
             if($counter==count($googleDirectionsResponse->routes[0]->legs)){
                 $distance=round($path->distance->value/1000,2);
-                $duration=explode(' ',$path->duration->text)[0];
+                $duration=(string)ceil($path->duration->value/60);
                 $destination_duration=$duration;
-                $total_duration+=$distance;
+                $total_duration+=$duration;
                 $destination_distance=$distance;
-                $total_distance+=$duration;
+                $total_distance+=$distance;
                 break;
             }
 
@@ -55,7 +55,7 @@ class ShortestPath{
 
             //WAYPOINT!!!
             $distance=round($path->distance->value/1000,2);
-            $duration=explode(' ',$path->duration->text)[0];
+            $duration=(string)ceil($path->duration->value/60);
             $place_duration=$duration;
             $total_duration+=$duration;
             $place_distance=$distance;
