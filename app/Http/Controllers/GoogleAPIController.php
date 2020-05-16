@@ -84,7 +84,7 @@ class GoogleAPIController extends Controller
         $responseStyle = 'short'; // the length of the response
         $citySize = 'cities5000'; // the minimal number of citizens a city must have
         $radius = 100; // the radius in KM
-        $maxRows = 10; // the maximum number of rows to retrieve
+        $maxRows = 4; // the maximum number of rows to retrieve
         $username = 'johndoe'; // the username of your GeoNames account
         
         // get nearby cities based on range as array from The GeoNames API
