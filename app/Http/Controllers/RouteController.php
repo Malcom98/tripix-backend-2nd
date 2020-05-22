@@ -211,7 +211,8 @@ class RouteController extends Controller
                     "longitude"=>$routeItem->longitude,
                     "duration"=>$routeItem->time,
                     "distance"=>$routeItem->distance,
-                    "photo_reference"=>$routeItem->photo_reference
+                    "photo_reference"=>$routeItem->photo_reference,
+                    "status"=>$routeItem->completed
                 ];
                 array_push($routeItemsArray,$routeItemObject);
             }
