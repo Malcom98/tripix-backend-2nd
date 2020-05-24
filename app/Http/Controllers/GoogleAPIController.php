@@ -306,7 +306,7 @@ class GoogleAPIController extends Controller
     //  @types - Array of google api types. (museums, amusement_parks, universities, etc)
     private function getAttractionsByType($request,&$types){
         $all_attractions=self::getAttraction($request,$types[0]);
-
+        return $all_attractions;
         for($i=1;$i<count($types);$i++){
             $new_attractions=self::getAttraction($request,$types[$i]);
             $all_attractions=array_merge($all_attractions,$new_attractions);
@@ -333,39 +333,38 @@ class GoogleAPIController extends Controller
             return response()->json(["Error" => "Bad Request"],400);
 
         $url="https://maps.googleapis.com/maps/api/place/textsearch/json?input=".rawurlencode($location)."&inputtype=textquery&type=".$type."&key=".env("GOOGLE_API_KEY","somedefaultvalue");
+        //return $url;
         $response=json_decode(file_get_contents($url));
         
         //In needed response variable there is only info that is needed for front end
-        //
-        $neededResponse=self::getAttractionInformationForFrontEnd($response);
+        $neededResponse=self::getAttractionInformationForFrontEnd($response,$location);
         return $neededResponse;
     }
 
     //Function getAttractionInformationForFrontEnd($response) is function which
     //gets only necessary information for frontend.
     //  @response - Google API response from which we get only necessary data.
-    private function getAttractionInformationForFrontEnd($response){
+    private function getAttractionInformationForFrontEnd($response,$lokacija){
         $noviRating=self::bayesFormula($response);
-
         $counter=0;
         $neededInformation=array();
         $places=((object)$response)->results;
         foreach($places as $place){
-            if(isset($place->photos) && $place->user_ratings_total>=50){
-                $name=$place->name;
-                $photo_reference=$place->photos[0]->photo_reference;
-                $location=$place->geometry->location;
-                $place_id=$place->place_id;
-                $rating=$place->rating;
-                $object=[
-                    "name"=>$name,
-                    "photo_reference"=>$photo_reference,
-                    "location"=>$location,
-                    "place_id"=>$place_id,
-                    "rating"=>$noviRating[$counter] 
-                ];
-                $counter++;
-                array_push($neededInformation,$object);
+            if(isset($place->photos) && $place->user_ratings_total>=50 && strpos($place->formatted_address,$lokacija)!==false){
+                    $name=$place->name;
+                    $photo_reference=$place->photos[0]->photo_reference;
+                    $location=$place->geometry->location;
+                    $place_id=$place->place_id;
+                    $rating=$place->rating;
+                    $object=[
+                        "name"=>$name,
+                        "photo_reference"=>$photo_reference,
+                        "location"=>$location,
+                        "place_id"=>$place_id,
+                        "rating"=>$noviRating[$counter] 
+                    ];
+                    $counter++;
+                    array_push($neededInformation,$object);
             }
         }
         
